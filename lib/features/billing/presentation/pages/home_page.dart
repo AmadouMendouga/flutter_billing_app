@@ -1,11 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibration/vibration.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -25,8 +22,6 @@ class _HomePageState extends State<HomePage> {
     returnImage: false,
   );
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
   bool _isCameraOn = true;
   bool _isFlashOn = false;
 
@@ -34,16 +29,8 @@ class _HomePageState extends State<HomePage> {
   final Map<String, DateTime> _lastScanTimes = {};
 
   @override
-  void initState() {
-    super.initState();
-    // Preload so the beep has no loading delay on the first scan.
-    _audioPlayer.setSource(AssetSource('audio/beep.wav'));
-  }
-
-  @override
   void dispose() {
     _scannerController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -65,9 +52,6 @@ class _HomePageState extends State<HomePage> {
 
         _lastScanTimes[rawValue] = now;
 
-        // Beep
-        unawaited(_audioPlayer.seek(Duration.zero));
-        unawaited(_audioPlayer.resume());
         // Vibrate
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {
