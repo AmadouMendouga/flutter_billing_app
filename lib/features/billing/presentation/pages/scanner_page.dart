@@ -17,15 +17,6 @@ class _ScannerPageState extends State<ScannerPage> {
   final MobileScannerController controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     returnImage: false,
-    formats: const [
-      BarcodeFormat.ean13,
-      BarcodeFormat.ean8,
-      BarcodeFormat.upcA,
-      BarcodeFormat.upcE,
-      BarcodeFormat.code128,
-      BarcodeFormat.code39,
-      BarcodeFormat.qrCode,
-    ],
   );
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isScanned = false;
