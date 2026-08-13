@@ -152,10 +152,11 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'UPI ID'),
+                    const InputLabel(text: 'Numéro Orange Money'),
                     _buildTextField(
                       controller: _upiController,
-                      hint: 'dineshsowndar@oksbi',
+                      hint: '691689674',
+                      keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 15),
                     Row(
