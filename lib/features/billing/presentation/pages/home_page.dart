@@ -21,8 +21,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final MobileScannerController _scannerController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
+    detectionSpeed: DetectionSpeed.noDuplicates,
     returnImage: false,
+    formats: const [
+      BarcodeFormat.ean13,
+      BarcodeFormat.ean8,
+      BarcodeFormat.upcA,
+      BarcodeFormat.upcE,
+      BarcodeFormat.code128,
+      BarcodeFormat.code39,
+      BarcodeFormat.qrCode,
+    ],
   );
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -76,9 +85,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  bool _audioUnlocked = false;
+
+  // iOS Safari only allows audio playback that originates from a direct user
+  // gesture. Barcode detection happens on a camera-frame callback, not a
+  // gesture, so the very first beep can be silently blocked. Priming the
+  // player on the first tap anywhere on this page unlocks it for the rest
+  // of the session.
+  void _unlockAudioOnce() {
+    if (_audioUnlocked) return;
+    _audioUnlocked = true;
+    unawaited(_audioPlayer.play(AssetSource('audio/beep.wav')));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Listener(
+      onPointerDown: (_) => _unlockAudioOnce(),
+      child: Scaffold(
       body: BlocListener<BillingBloc, BillingState>(
         listenWhen: (previous, current) =>
             previous.error != current.error && current.error != null,
@@ -129,6 +153,7 @@ class _HomePageState extends State<HomePage> {
           label: 'Review Order',
         );
       }),
+      ),
     );
   }
 
