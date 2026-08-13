@@ -83,8 +83,8 @@ class _AuthPageState extends State<AuthPage> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
-                        decoration:
-                            const InputDecoration(hintText: 'toi@exemple.com'),
+                        decoration: const InputDecoration(
+                            hintText: 'amadou69mendouga@exemple.com'),
                         validator: AppValidators.email,
                       ),
                       const SizedBox(height: 15),
@@ -93,8 +93,8 @@ class _AuthPageState extends State<AuthPage> {
                         controller: _passwordController,
                         obscureText: true,
                         autofillHints: const [AutofillHints.password],
-                        decoration:
-                            const InputDecoration(hintText: 'Min. 6 caractères'),
+                        decoration: const InputDecoration(
+                            hintText: 'Min. 6 caractères'),
                         validator: AppValidators.password,
                       ),
                       const SizedBox(height: 8),
@@ -103,6 +103,35 @@ class _AuthPageState extends State<AuthPage> {
                         isLoading: isLoading,
                         icon: _isSignUp ? Icons.person_add : Icons.login,
                         label: _isSignUp ? 'Créer le compte' : 'Se connecter',
+                      ),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('ou',
+                                style: TextStyle(color: Colors.grey[500])),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: isLoading
+                            ? null
+                            : () => context
+                                .read<AuthBloc>()
+                                .add(GoogleSignInRequested()),
+                        icon: const Icon(Icons.account_circle_outlined),
+                        label: const Text('Continuer avec Google'),
+                        style: OutlinedButton.styleFrom(
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
                       ),
                       TextButton(
                         onPressed: isLoading

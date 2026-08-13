@@ -47,6 +47,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, AppUser>> signInWithGoogle() async {
+    try {
+      final credential =
+          await _firebaseAuth.signInWithProvider(GoogleAuthProvider());
+      return Right(_toAppUser(credential.user)!);
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(_messageFor(e)));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logOut() async {
     try {
       await _firebaseAuth.signOut();
@@ -72,6 +83,11 @@ class AuthRepositoryImpl implements AuthRepository {
         return 'Connexion par email/mot de passe non activée.';
       case 'network-request-failed':
         return 'Pas de connexion internet.';
+      case 'popup-closed-by-user':
+      case 'cancelled-popup-request':
+        return 'Connexion annulée.';
+      case 'account-exists-with-different-credential':
+        return 'Un compte existe déjà avec cet email via un autre moyen de connexion.';
       default:
         return e.message ?? 'Une erreur est survenue.';
     }
