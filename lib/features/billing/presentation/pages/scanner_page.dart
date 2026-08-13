@@ -35,10 +35,8 @@ class _ScannerPageState extends State<ScannerPage> {
     for (final barcode in barcodes) {
       if (barcode.rawValue != null) {
         _isScanned = true;
-        // Beep (best-effort; must never block barcode processing)
-        try {
-          unawaited(_audioPlayer.play(AssetSource('audio/beep.wav')));
-        } catch (_) {}
+        // Beep
+        unawaited(_audioPlayer.play(AssetSource('audio/beep.wav')));
         // Vibrate
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {

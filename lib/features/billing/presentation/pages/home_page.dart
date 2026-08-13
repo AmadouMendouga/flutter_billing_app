@@ -34,6 +34,13 @@ class _HomePageState extends State<HomePage> {
   final Map<String, DateTime> _lastScanTimes = {};
 
   @override
+  void initState() {
+    super.initState();
+    // Preload so the beep has no loading delay on the first scan.
+    _audioPlayer.setSource(AssetSource('audio/beep.wav'));
+  }
+
+  @override
   void dispose() {
     _scannerController.dispose();
     _audioPlayer.dispose();
@@ -58,10 +65,9 @@ class _HomePageState extends State<HomePage> {
 
         _lastScanTimes[rawValue] = now;
 
-        // Beep (best-effort; must never block barcode processing)
-        try {
-          unawaited(_audioPlayer.play(AssetSource('audio/beep.wav')));
-        } catch (_) {}
+        // Beep
+        unawaited(_audioPlayer.seek(Duration.zero));
+        unawaited(_audioPlayer.resume());
         // Vibrate
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {
