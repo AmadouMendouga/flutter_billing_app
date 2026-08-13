@@ -10,6 +10,7 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/auth_page.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
+import 'features/shop/domain/entities/shop.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
 import 'features/settings/presentation/bloc/printer_bloc.dart';
 import 'features/settings/presentation/bloc/printer_event.dart';
@@ -81,6 +82,12 @@ class _AuthGate extends StatelessWidget {
         if (state is AuthAuthenticated) {
           context.read<ProductBloc>().add(LoadProducts());
           context.read<ShopBloc>().add(LoadShopEvent());
+          final shopName = state.pendingShopName;
+          if (shopName != null && shopName.isNotEmpty) {
+            context
+                .read<ShopBloc>()
+                .add(UpdateShopEvent(Shop(name: shopName)));
+          }
         } else if (state is AuthUnauthenticated) {
           context.read<ProductBloc>().add(ClearProducts());
           context.read<ShopBloc>().add(ClearShopEvent());

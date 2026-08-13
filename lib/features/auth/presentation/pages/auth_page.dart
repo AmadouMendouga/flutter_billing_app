@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
+import '../../../../core/widgets/google_sign_in_button.dart';
 import '../../../../core/widgets/input_label.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../bloc/auth_bloc.dart';
@@ -16,12 +17,14 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   final _formKey = GlobalKey<FormState>();
+  final _shopNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isSignUp = false;
 
   @override
   void dispose() {
+    _shopNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -32,7 +35,9 @@ class _AuthPageState extends State<AuthPage> {
     final email = _emailController.text;
     final password = _passwordController.text;
     if (_isSignUp) {
-      context.read<AuthBloc>().add(SignUpRequested(email, password));
+      context
+          .read<AuthBloc>()
+          .add(SignUpRequested(email, password, _shopNameController.text.trim()));
     } else {
       context.read<AuthBloc>().add(LogInRequested(email, password));
     }
@@ -78,6 +83,20 @@ class _AuthPageState extends State<AuthPage> {
                         style: TextStyle(color: Colors.grey[500]),
                       ),
                       const SizedBox(height: 32),
+                      if (_isSignUp) ...[
+                        const InputLabel(text: 'Nom de la boutique'),
+                        TextFormField(
+                          controller: _shopNameController,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: const InputDecoration(
+                              hintText: 'Ma Boutique'),
+                          validator: _isSignUp
+                              ? AppValidators.required(
+                                  'Nom de la boutique requis')
+                              : null,
+                        ),
+                        const SizedBox(height: 15),
+                      ],
                       const InputLabel(text: 'Email'),
                       TextFormField(
                         controller: _emailController,
@@ -117,21 +136,12 @@ class _AuthPageState extends State<AuthPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      OutlinedButton.icon(
+                      GoogleSignInButton(
                         onPressed: isLoading
                             ? null
                             : () => context
                                 .read<AuthBloc>()
                                 .add(GoogleSignInRequested()),
-                        icon: const Icon(Icons.account_circle_outlined),
-                        label: const Text('Continuer avec Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
                       ),
                       TextButton(
                         onPressed: isLoading

@@ -44,7 +44,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await authRepository.signUp(event.email, event.password);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+      (user) => emit(
+          AuthAuthenticated(user, pendingShopName: event.shopName)),
     );
   }
 

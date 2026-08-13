@@ -15,9 +15,12 @@ class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
   final AppUser user;
-  const AuthAuthenticated(this.user);
+  /// Shop name entered on the sign-up form, to be saved once. Null for
+  /// logins/session restores, where there's nothing new to save.
+  final String? pendingShopName;
+  const AuthAuthenticated(this.user, {this.pendingShopName});
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, pendingShopName];
 }
 
 class AuthUnauthenticated extends AuthState {}

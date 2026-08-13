@@ -19,9 +19,10 @@ class AuthUserChanged extends AuthEvent {
 class SignUpRequested extends AuthEvent {
   final String email;
   final String password;
-  const SignUpRequested(this.email, this.password);
+  final String shopName;
+  const SignUpRequested(this.email, this.password, this.shopName);
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email, password, shopName];
 }
 
 class LogInRequested extends AuthEvent {
