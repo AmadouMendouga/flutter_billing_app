@@ -1,10 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibration/vibration.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -18,13 +15,11 @@ class _ScannerPageState extends State<ScannerPage> {
     detectionSpeed: DetectionSpeed.noDuplicates,
     returnImage: false,
   );
-  final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isScanned = false;
 
   @override
   void dispose() {
     controller.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -35,8 +30,6 @@ class _ScannerPageState extends State<ScannerPage> {
     for (final barcode in barcodes) {
       if (barcode.rawValue != null) {
         _isScanned = true;
-        // Beep
-        unawaited(_audioPlayer.play(AssetSource('audio/beep.wav')));
         // Vibrate
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {

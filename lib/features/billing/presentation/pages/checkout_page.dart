@@ -56,9 +56,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
               return BlocBuilder<ShopBloc, ShopState>(
                   builder: (context, shopState) {
                 String upiId = '';
+                String shopName = 'Shop';
 
                 if (shopState is ShopLoaded) {
                   upiId = shopState.shop.upiId;
+                  shopName = shopState.shop.name;
                 }
 
                 return Column(
@@ -118,11 +120,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             TextAlign.left,
                                           ),
                                           _buildDataCell(
-                                              '${item.product.price.toStringAsFixed(0)} FCFA',
+                                              '₹${item.product.price.toStringAsFixed(2)}',
                                               TextAlign.right,
                                               isSubtitle: true),
                                           _buildDataCell(
-                                              '${item.total.toStringAsFixed(0)} FCFA',
+                                              '₹${item.total.toStringAsFixed(2)}',
                                               TextAlign.right,
                                               isBold: true),
                                         ],
@@ -172,7 +174,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     ? Column(
                                         children: [
                                           const Text(
-                                            'Scan to Pay (Orange Money)',
+                                            'Scan to Pay',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -186,7 +188,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             height: 180,
                                             child: PrettyQrView.data(
                                               data:
-                                                  'tel:%23150*11*$upiId*${billingState.totalAmount.toStringAsFixed(0)}%23',
+                                                  'upi://pay?pa=$upiId&pn=$shopName&am=${billingState.totalAmount.toStringAsFixed(2)}&cu=INR',
                                             ),
                                           ),
                                         ],
@@ -207,7 +209,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ),
                                     ),
                                     Text(
-                                      '${billingState.totalAmount.toStringAsFixed(0)} FCFA',
+                                      '₹${billingState.totalAmount.toStringAsFixed(2)}',
                                       style: const TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,

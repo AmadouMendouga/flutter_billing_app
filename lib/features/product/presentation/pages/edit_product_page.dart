@@ -116,11 +116,11 @@ class _EditProductPageState extends State<EditProductPage> {
                   const InputLabel(text: 'Price'),
 
                   TextFormField(
-                    initialValue: _price.toStringAsFixed(0),
+                    initialValue: _price.toStringAsFixed(2),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      prefixText: 'FCFA ',
+                      prefixText: '₹ ',
                       prefixStyle: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

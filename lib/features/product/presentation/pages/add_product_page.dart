@@ -134,8 +134,8 @@ class _AddProductPageState extends State<AddProductPage> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      hintText: '0',
-                      prefixText: 'FCFA ',
+                      hintText: '0.00',
+                      prefixText: '₹ ',
                       prefixStyle: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
