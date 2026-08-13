@@ -103,7 +103,7 @@ class _AuthPageState extends State<AuthPage> {
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
                         decoration: const InputDecoration(
-                            hintText: 'amadou69mendouga@exemple.com'),
+                            hintText: 'nara@example.com'),
                         validator: AppValidators.email,
                       ),
                       const SizedBox(height: 15),

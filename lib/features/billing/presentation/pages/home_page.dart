@@ -8,9 +8,13 @@ import 'package:vibration/vibration.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../billing/presentation/bloc/billing_bloc.dart';
+import '../../../../core/data/hive_database.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../domain/entities/cart_item.dart';
+
+const _shopReminderDismissedKey = 'shop_reminder_dismissed';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +33,8 @@ class _HomePageState extends State<HomePage> {
 
   bool _isCameraOn = true;
   bool _isFlashOn = false;
+  bool _shopReminderDismissed =
+      HiveDatabase.settingsBox.get(_shopReminderDismissedKey, defaultValue: false);
 
   // Cooldown mapping to prevent rapid firing of the same barcode
   final Map<String, DateTime> _lastScanTimes = {};
@@ -315,6 +321,78 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildShopReminderBanner() {
+    return BlocBuilder<ShopBloc, ShopState>(
+      builder: (context, state) {
+        if (state is! ShopLoaded || state.shop.addressLine1.isNotEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.storefront, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text('Personnalise ta boutique !',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  "Ajoute l'adresse et le téléphone de ta boutique pour qu'ils apparaissent sur tes reçus.",
+                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        HiveDatabase.settingsBox
+                            .put(_shopReminderDismissedKey, true);
+                        setState(() => _shopReminderDismissed = true);
+                      },
+                      child: const Text('Ne plus afficher'),
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                      ),
+                      onPressed: () async {
+                        _scannerController.stop();
+                        await context.push('/shop');
+                        if (_isCameraOn && mounted) _scannerController.start();
+                      },
+                      icon: const Icon(Icons.arrow_forward, size: 16),
+                      label: const Text('Modifier'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildBottomPanel() {
     return Container(
       decoration: BoxDecoration(
@@ -337,6 +415,8 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
+
+          if (!_shopReminderDismissed) _buildShopReminderBanner(),
 
           // Header
           BlocBuilder<BillingBloc, BillingState>(
