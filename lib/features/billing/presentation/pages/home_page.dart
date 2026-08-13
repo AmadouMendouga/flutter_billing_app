@@ -1,5 +1,7 @@
+import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemSound, SystemSoundType;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibration/vibration.dart';
@@ -23,6 +25,8 @@ class _HomePageState extends State<HomePage> {
     returnImage: false,
   );
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   bool _isCameraOn = true;
   bool _isFlashOn = false;
 
@@ -32,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _scannerController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -53,8 +58,10 @@ class _HomePageState extends State<HomePage> {
 
         _lastScanTimes[rawValue] = now;
 
-        // Beep (lightweight system sound, no audio session/plugin overhead)
-        SystemSound.play(SystemSoundType.click);
+        // Beep (best-effort; must never block barcode processing)
+        try {
+          unawaited(_audioPlayer.play(AssetSource('audio/bip.mp3')));
+        } catch (_) {}
         // Vibrate
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {
