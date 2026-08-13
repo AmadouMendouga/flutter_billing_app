@@ -8,6 +8,26 @@ class AppValidators {
     };
   }
 
+  static String? email(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter an email';
+    }
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  static String? password(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
   static String? price(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter a price';

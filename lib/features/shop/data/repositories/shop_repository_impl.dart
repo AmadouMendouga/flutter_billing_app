@@ -1,30 +1,28 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/data/hive_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/shop.dart';
 import '../../domain/repositories/shop_repository.dart';
 import '../models/shop_model.dart';
 
 class ShopRepositoryImpl implements ShopRepository {
-  static const String shopKey = 'shop_details';
+  DocumentReference<Map<String, dynamic>> _shopDoc(String uid) =>
+      FirebaseFirestore.instance.collection('shops').doc(uid);
 
   @override
   Future<Either<Failure, Shop>> getShop() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const Left(AuthFailure('No authenticated user'));
+    }
     try {
-      final box = HiveDatabase.shopBox;
-      final shop = box.get(shopKey);
-      if (shop != null) {
-        return Right(shop);
-      } else {
-        // Return default shop if not found
-        return const Right(Shop(
-            name: 'Amad Shop',
-            addressLine1: 'Yassa',
-            addressLine2: 'Pariso - Nyalla',
-            phoneNumber: '+237691689674',
-            upiId: '691689674',
-            footerText: 'Merci à Bientot'));
+      final snapshot = await _shopDoc(uid).get();
+      if (!snapshot.exists) {
+        // New account: no shop details yet, let the user fill their own in.
+        return const Right(Shop());
       }
+      return Right(ShopModel.fromMap(snapshot.data()!));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -32,10 +30,13 @@ class ShopRepositoryImpl implements ShopRepository {
 
   @override
   Future<Either<Failure, void>> updateShop(Shop shop) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const Left(AuthFailure('No authenticated user'));
+    }
     try {
-      final box = HiveDatabase.shopBox;
       final model = ShopModel.fromEntity(shop);
-      await box.put(shopKey, model);
+      await _shopDoc(uid).set(model.toMap());
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

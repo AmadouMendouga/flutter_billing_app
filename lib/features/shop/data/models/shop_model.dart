@@ -1,44 +1,14 @@
-import 'package:hive/hive.dart';
 import '../../domain/entities/shop.dart';
 
-part 'shop_model.g.dart';
-
-@HiveType(typeId: 1)
 class ShopModel extends Shop {
-  @override
-  @HiveField(0)
-  final String name;
-  @override
-  @HiveField(1)
-  final String addressLine1;
-  @override
-  @HiveField(2)
-  final String addressLine2;
-  @override
-  @HiveField(3)
-  final String phoneNumber;
-  @override
-  @HiveField(4)
-  final String upiId;
-  @override
-  @HiveField(5)
-  final String footerText;
-
   const ShopModel({
-    required this.name,
-    required this.addressLine1,
-    required this.addressLine2,
-    required this.phoneNumber,
-    required this.upiId,
-    required this.footerText,
-  }) : super(
-          name: name,
-          addressLine1: addressLine1,
-          addressLine2: addressLine2,
-          phoneNumber: phoneNumber,
-          upiId: upiId,
-          footerText: footerText,
-        );
+    required super.name,
+    required super.addressLine1,
+    required super.addressLine2,
+    required super.phoneNumber,
+    required super.upiId,
+    required super.footerText,
+  });
 
   factory ShopModel.fromEntity(Shop shop) {
     return ShopModel(
@@ -49,6 +19,28 @@ class ShopModel extends Shop {
       upiId: shop.upiId,
       footerText: shop.footerText,
     );
+  }
+
+  factory ShopModel.fromMap(Map<String, dynamic> map) {
+    return ShopModel(
+      name: map['name'] as String? ?? '',
+      addressLine1: map['addressLine1'] as String? ?? '',
+      addressLine2: map['addressLine2'] as String? ?? '',
+      phoneNumber: map['phoneNumber'] as String? ?? '',
+      upiId: map['upiId'] as String? ?? '',
+      footerText: map['footerText'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'addressLine1': addressLine1,
+      'addressLine2': addressLine2,
+      'phoneNumber': phoneNumber,
+      'upiId': upiId,
+      'footerText': footerText,
+    };
   }
 
   Shop toEntity() => this;

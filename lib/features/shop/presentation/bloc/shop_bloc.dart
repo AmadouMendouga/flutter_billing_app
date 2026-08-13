@@ -17,6 +17,7 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
   }) : super(ShopInitial()) {
     on<LoadShopEvent>(_onLoadShop);
     on<UpdateShopEvent>(_onUpdateShop);
+    on<ClearShopEvent>((event, emit) => emit(ShopInitial()));
   }
 
   Future<void> _onLoadShop(LoadShopEvent event, Emitter<ShopState> emit) async {

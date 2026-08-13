@@ -9,6 +9,10 @@ abstract class ProductEvent extends Equatable {
 
 class LoadProducts extends ProductEvent {}
 
+/// Resets state to empty, e.g. right after logout so the next account
+/// doesn't briefly see the previous account's products.
+class ClearProducts extends ProductEvent {}
+
 class AddProduct extends ProductEvent {
   final Product product;
   const AddProduct(this.product);

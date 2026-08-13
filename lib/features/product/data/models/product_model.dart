@@ -1,39 +1,13 @@
-import 'package:hive/hive.dart';
 import '../../domain/entities/product.dart';
 
-part 'product_model.g.dart'; // Hive generator
-
-@HiveType(typeId: 0)
 class ProductModel extends Product {
-  @override
-  @HiveField(0)
-  final String id;
-  @override
-  @HiveField(1)
-  final String name;
-  @override
-  @HiveField(2)
-  final String barcode;
-  @override
-  @HiveField(3)
-  final double price;
-  @override
-  @HiveField(4)
-  final int stock;
-
   const ProductModel({
-    required this.id,
-    required this.name,
-    required this.barcode,
-    required this.price,
-    required this.stock,
-  }) : super(
-          id: id,
-          name: name,
-          barcode: barcode,
-          price: price,
-          stock: stock,
-        );
+    required super.id,
+    required super.name,
+    required super.barcode,
+    required super.price,
+    required super.stock,
+  });
 
   factory ProductModel.fromEntity(Product product) {
     return ProductModel(
@@ -43,6 +17,25 @@ class ProductModel extends Product {
       price: product.price,
       stock: product.stock,
     );
+  }
+
+  factory ProductModel.fromMap(String id, Map<String, dynamic> map) {
+    return ProductModel(
+      id: id,
+      name: map['name'] as String? ?? '',
+      barcode: map['barcode'] as String? ?? '',
+      price: (map['price'] as num?)?.toDouble() ?? 0,
+      stock: (map['stock'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'barcode': barcode,
+      'price': price,
+      'stock': stock,
+    };
   }
 
   Product toEntity() {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "398053493092",
+    "project_id": "amad-shop-billing-2c68c",
+    "storage_bucket": "amad-shop-billing-2c68c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:398053493092:android:837175139e0936358d5271",
+        "android_client_info": {
+          "package_name": "com.amadshop.billing_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuj0-6LveRzTcAKpcoA087Onyx_ZFhTnY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

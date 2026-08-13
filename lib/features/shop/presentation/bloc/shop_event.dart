@@ -8,6 +8,10 @@ abstract class ShopEvent extends Equatable {
 
 class LoadShopEvent extends ShopEvent {}
 
+/// Resets state to initial, e.g. right after logout so the next account
+/// doesn't briefly see the previous account's shop details.
+class ClearShopEvent extends ShopEvent {}
+
 class UpdateShopEvent extends ShopEvent {
   final Shop shop;
   const UpdateShopEvent(this.shop);

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_settings/app_settings.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
@@ -211,6 +212,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     fontStyle: FontStyle.italic,
                     color: Colors.grey[500]),
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Account Section
+            _buildSectionHeader('Account'),
+            _buildListGroup(
+              children: [
+                _buildListItem(
+                  icon: Icons.logout,
+                  title: 'Log Out',
+                  subtitle: 'Sign out of this shop account',
+                  trailingIcon: null,
+                  onTap: () =>
+                      context.read<AuthBloc>().add(LogOutRequested()),
+                ),
+              ],
             ),
 
             const SizedBox(height: 48),
