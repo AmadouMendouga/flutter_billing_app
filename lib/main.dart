@@ -17,10 +17,17 @@ import 'features/settings/presentation/bloc/printer_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initializeFirebase();
-  await HiveDatabase.init();
-  await di.init();
-  runApp(const MyApp());
+  try {
+    await _initializeFirebase();
+    await HiveDatabase.init();
+    await di.init();
+    runApp(const MyApp());
+  } catch (_) {
+    // Ensures the web loading spinner (which only clears on the
+    // 'flutter-first-frame' event) never spins forever: a failed
+    // startup still renders a frame, with a retry that re-runs main().
+    runApp(const _StartupErrorApp());
+  }
 }
 
 /// On Flutter web, the JS interop bridge that firebase_core relies on can
@@ -39,6 +46,51 @@ Future<void> _initializeFirebase() async {
       if (attempt == 3) rethrow;
       await Future.delayed(Duration(milliseconds: 300 * attempt));
     }
+  }
+}
+
+/// Shown instead of an infinite loading spinner if startup (Firebase/Hive/DI
+/// init) fails. Lets the user retry without reloading the page.
+class _StartupErrorApp extends StatelessWidget {
+  const _StartupErrorApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  "Impossible de charger l'application.\nVérifiez votre connexion internet et réessayez.",
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                _RetryButton(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RetryButton extends StatelessWidget {
+  const _RetryButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: main,
+      child: const Text('Réessayer'),
+    );
   }
 }
 
