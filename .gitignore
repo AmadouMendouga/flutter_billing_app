@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Bundled APK for web download reminder (large binary, rebuilt per release)
+web/downloads/
