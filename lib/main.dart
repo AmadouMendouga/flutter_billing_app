@@ -1,10 +1,6 @@
-import 'dart:async';
-
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'config/routes/app_routes.dart';
 import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
@@ -122,73 +118,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// The APK is bundled alongside the web build (see web/downloads/) so it's
-/// reachable at this path on whatever domain hosts the web app.
-const _androidApkPath = 'downloads/AmadShop.apk';
-
 /// Shows the login/signup flow while unauthenticated, and the app's normal
 /// routed screens once signed in. Each branch owns a complete, separate
-/// MaterialApp rather than nesting a second Router inside a shared one, but
-/// both share [_navigatorKey] so the periodic web download reminder can
-/// show a dialog regardless of which branch is currently active.
+/// MaterialApp rather than nesting a second Router inside a shared one.
 /// Also keeps ProductBloc/ShopBloc in sync with the current account:
 /// reloads their data on sign-in, and clears it on sign-out so the next
 /// account never briefly sees the previous one's shop/products.
-class _AuthGate extends StatefulWidget {
+class _AuthGate extends StatelessWidget {
   const _AuthGate();
-
-  @override
-  State<_AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<_AuthGate> {
-  Timer? _downloadReminderTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    if (kIsWeb) {
-      _downloadReminderTimer = Timer.periodic(
-        const Duration(minutes: 30),
-        (_) => _showDownloadReminder(),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _downloadReminderTimer?.cancel();
-    super.dispose();
-  }
-
-  void _showDownloadReminder() {
-    final context = rootNavigatorKey.currentState?.overlay?.context;
-    if (context == null) return;
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Installe l\'application Android'),
-        content: const Text(
-          'Pour une meilleure expérience (scan plus rapide, hors ligne), '
-          'installe l\'application Android au lieu d\'utiliser le site web.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Plus tard'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              launchUrl(Uri.base.resolve(_androidApkPath),
-                  webOnlyWindowName: '_blank');
-            },
-            child: const Text('Télécharger'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +148,6 @@ class _AuthGateState extends State<_AuthGate> {
       builder: (context, state) {
         if (state is AuthAuthenticated) {
           return MaterialApp.router(
-            key: const ValueKey('authenticated'),
             title: 'Billing App',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,
@@ -220,8 +156,6 @@ class _AuthGateState extends State<_AuthGate> {
         }
         if (state is AuthUnauthenticated || state is AuthError) {
           return MaterialApp(
-            key: const ValueKey('unauthenticated'),
-            navigatorKey: rootNavigatorKey,
             title: 'Billing App',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,
@@ -231,8 +165,6 @@ class _AuthGateState extends State<_AuthGate> {
         // AuthInitial / AuthLoading: still resolving whether a session is
         // already persisted — avoid flashing the login screen.
         return MaterialApp(
-          key: const ValueKey('loading'),
-          navigatorKey: rootNavigatorKey,
           title: 'Billing App',
           theme: AppTheme.lightTheme,
           debugShowCheckedModeBanner: false,
