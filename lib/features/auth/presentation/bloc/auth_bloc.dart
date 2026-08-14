@@ -12,6 +12,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
   StreamSubscription<AppUser?>? _authSubscription;
 
+  /// Shop name entered at sign-up, held here (rather than only on the
+  /// emitted state) so it survives the email-verification gate: the
+  /// Firebase authStateChanges stream can re-fire AuthUserChanged one or
+  /// more times while verification is pending, each of which would
+  /// otherwise reset it before EmailVerificationPage ever gets to consume
+  /// it. Cleared once a verified user state is emitted, or on sign-out.
+  String? _pendingShopName;
+
   AuthBloc({required this.authRepository}) : super(AuthInitial()) {
     on<AuthSubscriptionRequested>(_onSubscriptionRequested);
     on<AuthUserChanged>(_onUserChanged);
@@ -31,9 +39,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onUserChanged(AuthUserChanged event, Emitter<AuthState> emit) {
-    if (event.user != null) {
-      emit(AuthAuthenticated(event.user!));
+    final user = event.user;
+    if (user != null) {
+      final shopName = _pendingShopName;
+      if (user.emailVerified) {
+        _pendingShopName = null;
+      }
+      emit(AuthAuthenticated(user, pendingShopName: shopName));
     } else {
+      _pendingShopName = null;
       emit(AuthUnauthenticated());
     }
   }
@@ -44,8 +58,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await authRepository.signUp(event.email, event.password);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (user) => emit(
-          AuthAuthenticated(user, pendingShopName: event.shopName)),
+      (user) {
+        _pendingShopName = event.shopName;
+        emit(AuthAuthenticated(user, pendingShopName: event.shopName));
+      },
     );
   }
 

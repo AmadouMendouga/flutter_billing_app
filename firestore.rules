@@ -9,5 +9,11 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }
+
+    // Verification codes are only ever read/written by Cloud Functions via
+    // the Admin SDK, which bypasses these rules — deny all client access.
+    match /email_verifications/{uid} {
+      allow read, write: if false;
+    }
   }
 }

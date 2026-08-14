@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failure.dart';
@@ -6,10 +7,15 @@ import '../../domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   AppUser? _toAppUser(User? user) {
     if (user == null) return null;
-    return AppUser(uid: user.uid, email: user.email);
+    return AppUser(
+      uid: user.uid,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    );
   }
 
   @override
@@ -67,6 +73,88 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+      return const Right(null);
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(_messageFor(e)));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendVerificationCode() async {
+    try {
+      await _functions.httpsCallable('sendVerificationCode').call();
+      return const Right(null);
+    } on FirebaseFunctionsException catch (e) {
+      return Left(AuthFailure(_messageForFunctionsError(e)));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppUser>> verifyEmailCode(String code) async {
+    try {
+      await _functions
+          .httpsCallable('verifyEmailCode')
+          .call({'code': code});
+      await _firebaseAuth.currentUser?.reload();
+      final refreshed = _toAppUser(_firebaseAuth.currentUser);
+      if (refreshed == null) {
+        return const Left(AuthFailure('Session expirée, reconnecte-toi.'));
+      }
+      return Right(refreshed);
+    } on FirebaseFunctionsException catch (e) {
+      return Left(AuthFailure(_messageForFunctionsError(e)));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendVerificationEmail() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return const Left(AuthFailure('Session expirée, reconnecte-toi.'));
+      }
+      await user.sendEmailVerification();
+      return const Right(null);
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(_messageFor(e)));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppUser>> refreshEmailVerificationStatus() async {
+    try {
+      await _firebaseAuth.currentUser?.reload();
+      final refreshed = _toAppUser(_firebaseAuth.currentUser);
+      if (refreshed == null) {
+        return const Left(AuthFailure('Session expirée, reconnecte-toi.'));
+      }
+      return Right(refreshed);
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(_messageFor(e)));
+    }
+  }
+
+  String _messageForFunctionsError(FirebaseFunctionsException e) {
+    switch (e.code) {
+      case 'invalid-argument':
+        return e.message ?? 'Code incorrect.';
+      case 'deadline-exceeded':
+        return 'Ce code a expiré, demande-en un nouveau.';
+      case 'resource-exhausted':
+        return e.message ?? 'Trop de tentatives, réessaie plus tard.';
+      case 'failed-precondition':
+        return e.message ?? "Aucun code n'a été demandé.";
+      case 'unauthenticated':
+        return 'Session expirée, reconnecte-toi.';
+      default:
+        return e.message ?? 'Une erreur est survenue.';
+    }
+  }
+
   String _messageFor(FirebaseAuthException e) {
     switch (e.code) {
       case 'email-already-in-use':
@@ -83,6 +171,8 @@ class AuthRepositoryImpl implements AuthRepository {
         return 'Connexion par email/mot de passe non activée.';
       case 'network-request-failed':
         return 'Pas de connexion internet.';
+      case 'too-many-requests':
+        return 'Trop de tentatives, réessaie dans quelques minutes.';
       case 'popup-closed-by-user':
       case 'cancelled-popup-request':
         return 'Connexion annulée.';

@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/auth_page.dart';
+import 'features/auth/presentation/pages/email_verification_page.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/domain/entities/shop.dart';
@@ -131,7 +132,7 @@ class _AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthAuthenticated) {
+        if (state is AuthAuthenticated && state.user.emailVerified) {
           context.read<ProductBloc>().add(LoadProducts());
           context.read<ShopBloc>().add(LoadShopEvent());
           final shopName = state.pendingShopName;
@@ -146,6 +147,14 @@ class _AuthGate extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        if (state is AuthAuthenticated && !state.user.emailVerified) {
+          return MaterialApp(
+            title: 'Billing App',
+            theme: AppTheme.lightTheme,
+            debugShowCheckedModeBanner: false,
+            home: EmailVerificationPage(user: state.user),
+          );
+        }
         if (state is AuthAuthenticated) {
           return MaterialApp.router(
             title: 'Billing App',

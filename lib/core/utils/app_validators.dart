@@ -28,6 +28,16 @@ class AppValidators {
     return null;
   }
 
+  static String? otpCode(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Entre le code reçu par email';
+    }
+    if (!RegExp(r'^\d{6}$').hasMatch(value.trim())) {
+      return 'Le code doit contenir 6 chiffres';
+    }
+    return null;
+  }
+
   static String? price(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter a price';

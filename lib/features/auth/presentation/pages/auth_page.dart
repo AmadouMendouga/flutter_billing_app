@@ -7,6 +7,7 @@ import '../../../../core/widgets/google_sign_in_button.dart';
 import '../../../../core/widgets/input_label.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../bloc/auth_bloc.dart';
+import '../widgets/forgot_password_sheet.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -116,6 +117,17 @@ class _AuthPageState extends State<AuthPage> {
                             hintText: 'Min. 6 caractères'),
                         validator: AppValidators.password,
                       ),
+                      if (!_isSignUp)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: isLoading
+                                ? null
+                                : () => showForgotPasswordSheet(context,
+                                    initialEmail: _emailController.text),
+                            child: const Text('Mot de passe oublié ?'),
+                          ),
+                        ),
                       const SizedBox(height: 8),
                       PrimaryButton(
                         onPressed: isLoading ? null : _submit,
