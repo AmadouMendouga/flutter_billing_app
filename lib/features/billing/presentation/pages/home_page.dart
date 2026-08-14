@@ -36,6 +36,11 @@ class _HomePageState extends State<HomePage> {
   bool _shopReminderDismissed =
       HiveDatabase.settingsBox.get(_shopReminderDismissedKey, defaultValue: false);
 
+  // Vertical position (from the top) of the draggable bottom panel.
+  // Lazily initialized to the default position on first build, then
+  // updated as the user drags the handle up/down.
+  double? _panelTop;
+
   // Cooldown mapping to prevent rapid firing of the same barcode
   final Map<String, DateTime> _lastScanTimes = {};
 
@@ -84,6 +89,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final defaultPanelTop = (screenHeight * 0.4) - 24;
+    // How far the panel can be dragged: almost full screen when expanded,
+    // down to just the handle + header when collapsed.
+    final minPanelTop = topPadding + 80;
+    final maxPanelTop = screenHeight - 200;
+    _panelTop = (_panelTop ?? defaultPanelTop).clamp(minPanelTop, maxPanelTop);
+
     return Scaffold(
       body: BlocListener<BillingBloc, BillingState>(
         listenWhen: (previous, current) =>
@@ -110,13 +124,13 @@ class _HomePageState extends State<HomePage> {
               child: _buildScannerSection(),
             ),
 
-            // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
+            // BOTTOM PANEL (draggable up/down via its handle)
             Positioned(
-              top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
+              top: _panelTop!,
               left: 0,
               right: 0,
               bottom: 0,
-              child: _buildBottomPanel(),
+              child: _buildBottomPanel(minPanelTop, maxPanelTop),
             ),
           ],
         ),
@@ -393,7 +407,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBottomPanel() {
+  Widget _buildBottomPanel(double minPanelTop, double maxPanelTop) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -405,14 +419,29 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         children: [
-          // Drag handle indicator
-          Container(
-            width: 48,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
+          // Drag handle: pulls the whole panel up/down.
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragUpdate: (details) {
+              setState(() {
+                _panelTop = (_panelTop! + details.delta.dy)
+                    .clamp(minPanelTop, maxPanelTop);
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              color: Colors.transparent,
+              child: Center(
+                child: Container(
+                  width: 48,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
             ),
           ),
 
