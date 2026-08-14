@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/billing/presentation/pages/home_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
@@ -9,7 +10,13 @@ import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
 
+/// Shared with the unauthenticated/loading MaterialApp branches in
+/// main.dart so a single overlay context (e.g. for the periodic web
+/// download reminder) works regardless of which branch is active.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final router = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/',
   routes: [
     GoRoute(
