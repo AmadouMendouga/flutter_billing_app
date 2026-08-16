@@ -28,6 +28,26 @@ class AppValidators {
     return null;
   }
 
+  /// Firebase's password policy on this project (enforced server-side)
+  /// rejects passwords missing any of these, beyond the 6-character
+  /// minimum — validate the same rules client-side so sign-up doesn't
+  /// silently fail against a hint that only mentions the length.
+  static String? signUpPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Mot de passe requis';
+    }
+    final missing = <String>[];
+    if (value.length < 6) missing.add('6 caractères min.');
+    if (!RegExp(r'[a-z]').hasMatch(value)) missing.add('une minuscule');
+    if (!RegExp(r'[A-Z]').hasMatch(value)) missing.add('une majuscule');
+    if (!RegExp(r'[0-9]').hasMatch(value)) missing.add('un chiffre');
+    if (!RegExp(r'[^a-zA-Z0-9]').hasMatch(value)) {
+      missing.add('un caractère spécial');
+    }
+    if (missing.isEmpty) return null;
+    return 'Il manque : ${missing.join(', ')}';
+  }
+
   static String? otpCode(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Entre le code reçu par email';

@@ -113,9 +113,13 @@ class _AuthPageState extends State<AuthPage> {
                         controller: _passwordController,
                         obscureText: true,
                         autofillHints: const [AutofillHints.password],
-                        decoration: const InputDecoration(
-                            hintText: 'Min. 6 caractères'),
-                        validator: AppValidators.password,
+                        decoration: InputDecoration(
+                            hintText: _isSignUp
+                                ? 'Maj, min, chiffre & symbole (6+)'
+                                : 'Min. 6 caractères'),
+                        validator: _isSignUp
+                            ? AppValidators.signUpPassword
+                            : AppValidators.password,
                       ),
                       if (!_isSignUp)
                         Align(

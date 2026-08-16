@@ -163,6 +163,9 @@ class AuthRepositoryImpl implements AuthRepository {
         return 'Adresse email invalide.';
       case 'weak-password':
         return 'Mot de passe trop faible (6 caractères minimum).';
+      case 'password-does-not-meet-requirements':
+        return 'Le mot de passe doit contenir une majuscule, une minuscule, '
+            'un chiffre et un caractère spécial.';
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':
