@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -142,9 +143,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 previous.error != current.error && current.error != null,
         listener: (context, state) {
           if (state.error != null) {
+            final error = state.error!;
+            const productNotFoundPrefix = 'Product not found: ';
+            final message =
+                error.startsWith(productNotFoundPrefix)
+                    ? AppLocalizations.of(context).barcodeNotFound(
+                      error.substring(productNotFoundPrefix.length),
+                    )
+                    : error;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.error!),
+                content: Text(message),
                 backgroundColor: Colors.red,
                 behavior: SnackBarBehavior.floating,
               ),
@@ -188,7 +197,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       }
                     },
             icon: Icons.payment,
-            label: 'Review Order',
+            label: AppLocalizations.of(context).checkout,
           );
         },
       ),
@@ -303,21 +312,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Camera is turned off',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).cameraOffTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Turn on your camera to start scanning barcodes and items automatically.',
+              AppLocalizations.of(context).cameraOffBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ),
           const SizedBox(height: 24),
@@ -331,9 +340,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             icon: const Icon(Icons.videocam),
-            label: const Text(
-              'Turn on Camera',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            label: Text(
+              AppLocalizations.of(context).turnOnCamera,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () async {
               setState(() => _isCameraOn = true);
@@ -403,6 +412,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Widget _buildShopReminderBanner() {
     return BlocBuilder<ShopBloc, ShopState>(
       builder: (context, state) {
+        final scheme = Theme.of(context).colorScheme;
         if (state is! ShopLoaded || state.shop.addressLine1.isNotEmpty) {
           return const SizedBox.shrink();
         }
@@ -420,14 +430,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.storefront, color: AppTheme.primaryColor),
-                    SizedBox(width: 8),
+                    const Icon(Icons.storefront, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Personnalise ta boutique !',
-                        style: TextStyle(
+                        AppLocalizations.of(context).customizeShopTitle,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
@@ -436,9 +446,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  "Ajoute l'adresse et le téléphone de ta boutique pour qu'ils apparaissent sur tes reçus.",
-                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                Text(
+                  AppLocalizations.of(context).customizeShopBody,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -452,7 +465,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         );
                         setState(() => _shopReminderDismissed = true);
                       },
-                      child: const Text('Ne plus afficher'),
+                      child: Text(AppLocalizations.of(context).dontShowAgain),
                     ),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
@@ -471,7 +484,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         }
                       },
                       icon: const Icon(Icons.arrow_forward, size: 16),
-                      label: const Text('Modifier'),
+                      label: Text(AppLocalizations.of(context).edit),
                     ),
                   ],
                 ),
@@ -484,6 +497,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildBottomPanel(double minPanelTop, double maxPanelTop) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -546,18 +560,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Scanned Items',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context).scannedItems,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          '$totalItems items total',
-                          style: const TextStyle(
+                          AppLocalizations.of(context).itemsTotal(totalItems),
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -565,12 +579,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          'TOTAL PRICE',
+                        Text(
+                          AppLocalizations.of(context).totalPrice,
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                            color: scheme.onSurfaceVariant,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -627,6 +641,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildEmptyCart() {
+    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -635,28 +650,28 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: scheme.surfaceContainerHigh,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Icon(
               Icons.shopping_basket,
               size: 40,
-              color: Colors.grey[300],
+              color: scheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'List is empty',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          Text(
+            AppLocalizations.of(context).emptyList,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Scanned items will appear here as you scan them with the camera above.',
+              AppLocalizations.of(context).emptyListBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
             ),
           ),
         ],
@@ -665,13 +680,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildCartItemCard(BuildContext context, CartItem item) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -698,7 +718,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -706,7 +726,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: scheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(4),
@@ -755,12 +775,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(4.0),
-        child: Icon(icon, size: 20, color: Colors.grey[600]),
+        child: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
       ),
     );
   }

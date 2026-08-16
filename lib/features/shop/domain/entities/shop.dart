@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 
 class Shop extends Equatable {
@@ -7,6 +9,7 @@ class Shop extends Equatable {
   final String phoneNumber;
   final String upiId;
   final String footerText;
+  final Uint8List? profileImageBytes;
 
   const Shop({
     this.name = '',
@@ -15,6 +18,7 @@ class Shop extends Equatable {
     this.phoneNumber = '',
     this.upiId = '',
     this.footerText = '',
+    this.profileImageBytes,
   });
 
   Shop copyWith({
@@ -24,6 +28,8 @@ class Shop extends Equatable {
     String? phoneNumber,
     String? upiId,
     String? footerText,
+    Uint8List? profileImageBytes,
+    bool clearProfileImage = false,
   }) {
     return Shop(
       name: name ?? this.name,
@@ -32,10 +38,21 @@ class Shop extends Equatable {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       upiId: upiId ?? this.upiId,
       footerText: footerText ?? this.footerText,
+      profileImageBytes:
+          clearProfileImage
+              ? null
+              : profileImageBytes ?? this.profileImageBytes,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [name, addressLine1, addressLine2, phoneNumber, upiId, footerText];
+  List<Object?> get props => [
+    name,
+    addressLine1,
+    addressLine2,
+    phoneNumber,
+    upiId,
+    footerText,
+    profileImageBytes,
+  ];
 }

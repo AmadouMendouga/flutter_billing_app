@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../product/presentation/bloc/product_bloc.dart';
 import '../../../shop/domain/entities/shop.dart';
@@ -13,12 +12,9 @@ import '../pages/email_verification_page.dart';
 /// Switches between authentication, email verification, and the signed-in
 /// application while keeping account-scoped blocs synchronized.
 class AuthGate extends StatelessWidget {
-  const AuthGate({
-    super.key,
-    required this.authenticatedAppBuilder,
-  });
+  const AuthGate({super.key, required this.authenticatedChild});
 
-  final WidgetBuilder authenticatedAppBuilder;
+  final Widget authenticatedChild;
 
   @override
   Widget build(BuildContext context) {
@@ -39,41 +35,35 @@ class AuthGate extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is AuthAuthenticated && !state.user.emailVerified) {
-          return MaterialApp(
+          return Navigator(
             key: const ValueKey('email-verification-app'),
-            title: 'Billing App',
-            theme: AppTheme.lightTheme,
-            debugShowCheckedModeBanner: false,
-            home: EmailVerificationPage(user: state.user),
+            onGenerateRoute:
+                (_) => MaterialPageRoute<void>(
+                  builder: (_) => EmailVerificationPage(user: state.user),
+                ),
           );
         }
         if (state is AuthAuthenticated) {
           return KeyedSubtree(
             key: const ValueKey('authenticated-app'),
-            child: authenticatedAppBuilder(context),
+            child: authenticatedChild,
           );
         }
         if (state is AuthUnauthenticated ||
             state is AuthSubmitting ||
             state is AuthError) {
-          return MaterialApp(
+          return Navigator(
             key: const ValueKey('authentication-app'),
-            title: 'Billing App',
-            theme: AppTheme.lightTheme,
-            debugShowCheckedModeBanner: false,
-            home: const AuthPage(),
+            onGenerateRoute:
+                (_) =>
+                    MaterialPageRoute<void>(builder: (_) => const AuthPage()),
           );
         }
         // AuthInitial / AuthLoading: still resolving whether a session is
         // already persisted, so avoid flashing the login screen.
-        return MaterialApp(
-          key: const ValueKey('authentication-loading-app'),
-          title: 'Billing App',
-          theme: AppTheme.lightTheme,
-          debugShowCheckedModeBanner: false,
-          home: const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+        return const KeyedSubtree(
+          key: ValueKey('authentication-loading-app'),
+          child: Scaffold(body: Center(child: CircularProgressIndicator())),
         );
       },
     );

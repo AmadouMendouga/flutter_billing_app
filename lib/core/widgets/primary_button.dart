@@ -26,15 +26,18 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final style = ElevatedButton.styleFrom(
-      backgroundColor: Theme.of(context).primaryColor,
-      foregroundColor: Colors.white,
+      backgroundColor: scheme.primary,
+      foregroundColor: scheme.onPrimary,
+      disabledBackgroundColor: isLoading ? scheme.primary : null,
+      disabledForegroundColor: isLoading ? scheme.onPrimary : null,
       padding: padding,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       elevation: elevation,
-      shadowColor: Theme.of(context).primaryColor.withValues(alpha: 0.4),
+      shadowColor: scheme.primary.withValues(alpha: 0.4),
       minimumSize: isFullWidth ? const Size.fromHeight(50) : null,
     );
 
@@ -43,20 +46,18 @@ class PrimaryButton extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: ElevatedButton.icon(
           onPressed: isLoading ? null : onPressed,
-          icon: isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : Icon(icon),
-          label: Text(
-            label,
-            style: textStyle,
-          ),
+          icon:
+              isLoading
+                  ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: scheme.onPrimary,
+                      strokeWidth: 2,
+                    ),
+                  )
+                  : Icon(icon),
+          label: Text(label, style: textStyle),
           style: style,
         ),
       );
@@ -67,19 +68,17 @@ class PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: style,
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Text(
-                label,
-                style: textStyle,
-              ),
+        child:
+            isLoading
+                ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: scheme.onPrimary,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(label, style: textStyle),
       ),
     );
   }

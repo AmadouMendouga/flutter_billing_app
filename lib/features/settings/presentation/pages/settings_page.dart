@@ -1,14 +1,17 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app_settings/app_settings.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../domain/entities/app_preferences.dart';
+import '../bloc/app_preferences_cubit.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
 import '../bloc/printer_state.dart';
+import '../widgets/profile_avatar.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,257 +24,432 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Re-initialize printer state whenever settings page opens
     context.read<PrinterBloc>().add(InitPrinterEvent());
+  }
+
+  String _languageLabel(AppLocalizations l10n, AppLanguage language) {
+    return switch (language) {
+      AppLanguage.system => l10n.deviceDefault,
+      AppLanguage.english => l10n.english,
+      AppLanguage.french => l10n.french,
+    };
+  }
+
+  Future<void> _showLanguagePicker() async {
+    final pageContext = context;
+    await showModalBottomSheet<void>(
+      context: pageContext,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return BlocBuilder<AppPreferencesCubit, AppPreferences>(
+          builder: (context, preferences) {
+            final l10n = AppLocalizations.of(context);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.language,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  RadioGroup<AppLanguage>(
+                    groupValue: preferences.language,
+                    onChanged: (value) async {
+                      if (value == null) return;
+                      final success = await pageContext
+                          .read<AppPreferencesCubit>()
+                          .setLanguage(value);
+                      if (!sheetContext.mounted) return;
+                      Navigator.of(sheetContext).pop();
+                      if (!success && pageContext.mounted) {
+                        _showPreferenceError(pageContext);
+                      }
+                    },
+                    child: Column(
+                      children: [
+                        for (final language in AppLanguage.values)
+                          RadioListTile<AppLanguage>(
+                            value: language,
+                            title: Text(_languageLabel(l10n, language)),
+                            secondary: Icon(switch (language) {
+                              AppLanguage.system => Icons.phone_android,
+                              AppLanguage.english => Icons.language,
+                              AppLanguage.french => Icons.translate,
+                            }),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showPreferenceError(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).preferenceSaveFailed),
+        backgroundColor: scheme.error,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: Text(
+          l10n.settings,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         leading: IconButton(
-          icon: Icon(Icons.chevron_left,
-              size: 28, color: Theme.of(context).primaryColor),
+          icon: const Icon(Icons.chevron_left, size: 28),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 48),
         child: Column(
           children: [
-            // Profile Section
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-              child: BlocBuilder<ShopBloc, ShopState>(
-                builder: (context, state) {
-                  String shopName = 'Elite Groceries';
-                  String initials = 'EG';
-                  if (state is ShopLoaded && state.shop.name.isNotEmpty) {
-                    shopName = state.shop.name;
-                    final parts = shopName.split(' ');
-                    initials = parts
-                        .take(2)
-                        .map((p) => p.isNotEmpty ? p[0].toUpperCase() : '')
-                        .join('');
-                    if (initials.isEmpty) initials = 'S';
-                  }
-
-                  return Column(
-                    children: [
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryColor
-                                    .withValues(alpha: 0.2),
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                              )
-                            ]),
-                        alignment: Alignment.center,
-                        child: Text(initials,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -1)),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(shopName.toUpperCase(),
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                    ],
-                  );
-                },
-              ),
-            ),
-
+            _buildProfileSection(context),
             const SizedBox(height: 24),
-
-            // Management Section
-            _buildSectionHeader('Management'),
+            _buildSectionHeader(context, l10n.preferences),
+            _buildPreferencesGroup(context),
+            const SizedBox(height: 24),
+            _buildSectionHeader(context, l10n.management),
             _buildListGroup(
+              context,
               children: [
                 _buildListItem(
+                  context,
                   icon: Icons.qr_code_scanner,
-                  title: 'Products',
-                  subtitle: 'Manage stock and barcodes',
+                  title: l10n.products,
+                  subtitle: l10n.manageStockAndBarcodes,
                   onTap: () => context.push('/products'),
                 ),
-                _buildDivider(),
+                _buildDivider(context),
                 _buildListItem(
+                  context,
                   icon: Icons.storefront,
-                  title: 'Shop Details',
-                  subtitle: 'Edit business info & address',
+                  title: l10n.shopDetails,
+                  subtitle: l10n.editBusinessInfoAndAddress,
                   onTap: () => context.push('/shop'),
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
-            // Hardware Section
-            _buildSectionHeader('Hardware'),
-            BlocConsumer<PrinterBloc, PrinterState>(
-              listener: (context, state) {
-                if (state.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(state.errorMessage!),
-                      backgroundColor: Colors.red));
-                } else if (state.status == PrinterStatus.connected) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Connected to printer'),
-                      backgroundColor: Colors.green));
-                }
-              },
-              builder: (context, state) {
-                return _buildListGroup(
-                  children: [
-                    _buildListItem(
-                      icon: Icons.print,
-                      title: 'Print Device',
-                      subtitleWidget: Row(
-                        children: [
-                          Text(
-                            state.connectedMac != null
-                                ? (state.connectedName ?? 'Printer connected')
-                                : 'No printer connected',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[500]),
-                          ),
-                          if (state.connectedMac != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                  color: Colors.teal[100],
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.teal[200]!)),
-                              child: Text(
-                                'CONNECTED',
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.teal[700]),
-                              ),
-                            ),
-                          ]
-                        ],
-                      ),
-                      trailingWidget: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (state.status == PrinterStatus.scanning ||
-                              state.status == PrinterStatus.connecting)
-                            const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
-                          else
-                            IconButton(
-                              icon: const Icon(Icons.refresh),
-                              onPressed: () => context
-                                  .read<PrinterBloc>()
-                                  .add(RefreshPrinterEvent()),
-                              color: AppTheme.primaryColor,
-                            ),
-                          IconButton(
-                            icon: const Icon(Icons.settings),
-                            onPressed: () {
-                              AppSettings.openAppSettings(
-                                  type: AppSettingsType.bluetooth);
-                            },
-                            color: Colors.grey,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-
+            _buildSectionHeader(context, l10n.hardware),
+            _buildPrinterGroup(context),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: Text(
-                "To connect a new device, tap on the Settings gear to pair in phone's Bluetooth settings, then return and hit Refresh.",
-                style: TextStyle(
-                    fontSize: 11,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey[500]),
+                l10n.bluetoothPairingInstructions,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Account Section
-            _buildSectionHeader('Account'),
+            _buildSectionHeader(context, l10n.account),
             _buildListGroup(
+              context,
               children: [
                 _buildListItem(
+                  context,
                   icon: Icons.logout,
-                  title: 'Log Out',
-                  subtitle: 'Sign out of this shop account',
+                  title: l10n.logOut,
+                  subtitle: l10n.signOutAccount,
                   trailingIcon: null,
-                  onTap: () =>
-                      context.read<AuthBloc>().add(LogOutRequested()),
+                  onTap: () => context.read<AuthBloc>().add(LogOutRequested()),
                 ),
               ],
             ),
-
-            const SizedBox(height: 48),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title.toUpperCase(),
-          style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-              letterSpacing: 1.2),
+  Widget _buildProfileSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
+      child: InkWell(
+        onTap: () => context.push('/profile'),
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+            child: BlocBuilder<ShopBloc, ShopState>(
+              builder: (context, state) {
+                final shop = state is ShopLoaded ? state.shop : null;
+                final shopName =
+                    shop?.name.trim().isNotEmpty == true
+                        ? shop!.name.trim()
+                        : l10n.shopNameHint;
+                return Column(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        ProfileAvatar(
+                          name: shopName,
+                          imageBytes: shop?.profileImageBytes,
+                        ),
+                        Positioned(
+                          right: -4,
+                          bottom: -4,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: scheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: scheme.surfaceContainerLow,
+                                width: 3,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                color: scheme.onPrimary,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      shopName,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.editProfile,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildListGroup({required List<Widget> children}) {
+  Widget _buildPreferencesGroup(BuildContext context) {
+    return BlocBuilder<AppPreferencesCubit, AppPreferences>(
+      builder: (context, preferences) {
+        final l10n = AppLocalizations.of(context);
+        final isDark = preferences.themeMode == ThemeMode.dark;
+        return _buildListGroup(
+          context,
+          children: [
+            _buildListItem(
+              context,
+              icon: Icons.language,
+              title: l10n.language,
+              subtitle: _languageLabel(l10n, preferences.language),
+              onTap: _showLanguagePicker,
+            ),
+            _buildDivider(context),
+            _buildListItem(
+              context,
+              icon: isDark ? Icons.dark_mode : Icons.light_mode,
+              title: l10n.appearance,
+              subtitle: isDark ? l10n.darkMode : l10n.lightMode,
+              trailingWidget: Switch.adaptive(
+                key: const ValueKey('dark-mode-switch'),
+                value: isDark,
+                onChanged: (value) async {
+                  final success = await context
+                      .read<AppPreferencesCubit>()
+                      .setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+                  if (!success && context.mounted) {
+                    _showPreferenceError(context);
+                  }
+                },
+              ),
+              onTap: () async {
+                final success = await context
+                    .read<AppPreferencesCubit>()
+                    .setThemeMode(isDark ? ThemeMode.light : ThemeMode.dark);
+                if (!success && context.mounted) {
+                  _showPreferenceError(context);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPrinterGroup(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return BlocConsumer<PrinterBloc, PrinterState>(
+      listener: (context, state) {
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: scheme.error,
+            ),
+          );
+        } else if (state.status == PrinterStatus.connected) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.connectedToPrinter)));
+        }
+      },
+      builder: (context, state) {
+        return _buildListGroup(
+          context,
+          children: [
+            _buildListItem(
+              context,
+              icon: Icons.print,
+              title: l10n.printDevice,
+              subtitleWidget: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      state.connectedMac != null
+                          ? (state.connectedName ?? l10n.printerConnected)
+                          : l10n.noPrinterConnected,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  if (state.connectedMac != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        l10n.connected.toUpperCase(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onTertiaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              trailingWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (state.status == PrinterStatus.scanning ||
+                      state.status == PrinterStatus.connecting)
+                    const SizedBox.square(
+                      dimension: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed:
+                          () => context.read<PrinterBloc>().add(
+                            RefreshPrinterEvent(),
+                          ),
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    tooltip: l10n.settings,
+                    onPressed:
+                        () => AppSettings.openAppSettings(
+                          type: AppSettingsType.bluetooth,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          title.toUpperCase(),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: scheme.onSurfaceVariant,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListGroup(
+    BuildContext context, {
+    required List<Widget> children,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[100]!),
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(children: children),
     );
   }
 
-  Widget _buildDivider() {
-    return Divider(height: 1, thickness: 1, color: Colors.grey[50], indent: 64);
+  Widget _buildDivider(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: Theme.of(context).colorScheme.outlineVariant,
+      indent: 72,
+    );
   }
 
-  Widget _buildListItem({
+  Widget _buildListItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
@@ -280,47 +458,54 @@ class _SettingsPageState extends State<SettingsPage> {
     IconData? trailingIcon = Icons.chevron_right,
     VoidCallback? onTap,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: AppTheme.primaryColor, size: 20),
+              child: Icon(icon, color: scheme.onPrimaryContainer, size: 21),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 14)),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style:
-                            TextStyle(fontSize: 12, color: Colors.grey[500])),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                   if (subtitleWidget != null) ...[
                     const SizedBox(height: 4),
                     subtitleWidget,
-                  ]
+                  ],
                 ],
               ),
             ),
             if (trailingWidget != null)
               trailingWidget
             else if (trailingIcon != null)
-              Icon(trailingIcon, color: Colors.grey[300]),
+              Icon(trailingIcon, color: scheme.onSurfaceVariant),
           ],
         ),
       ),

@@ -1,0 +1,240 @@
+{
+  "@@locale": "en",
+  "appTitle": "Billing App",
+  "settings": "Settings",
+  "editProfile": "Edit profile",
+  "changePhoto": "Change photo",
+  "removePhoto": "Remove photo",
+  "displayName": "Display name",
+  "displayNameHint": "Your name or shop name",
+  "save": "Save",
+  "preferences": "Preferences",
+  "preferenceSaveFailed": "Could not save this preference.",
+  "language": "Language",
+  "deviceDefault": "Device default",
+  "english": "English",
+  "french": "French",
+  "appearance": "Appearance",
+  "darkMode": "Dark mode",
+  "lightMode": "Light mode",
+  "management": "Management",
+  "products": "Products",
+  "manageStockAndBarcodes": "Manage stock and barcodes",
+  "shopDetails": "Shop details",
+  "editBusinessInfoAndAddress": "Edit business info and address",
+  "hardware": "Hardware",
+  "printDevice": "Print device",
+  "printerConnected": "Printer connected",
+  "noPrinterConnected": "No printer connected",
+  "connected": "Connected",
+  "connectedToPrinter": "Connected to printer",
+  "bluetoothPairingInstructions": "To connect a new device, tap the Settings gear to pair it in your phone's Bluetooth settings, then return and tap Refresh.",
+  "account": "Account",
+  "logOut": "Log out",
+  "signOutAccount": "Sign out of this shop account",
+  "profileUpdated": "Profile updated",
+  "profileUpdateFailed": "The profile could not be updated.",
+  "chooseProfileImage": "Choose a profile image",
+  "profileImageHelp": "Choose any photo from your device. It will be resized automatically.",
+  "invalidImage": "This image could not be read.",
+  "imageTooLarge": "This image is too large. Choose another one.",
+  "nameRequired": "Please enter a name",
+  "editProfileSubtitle": "Update your name and profile photo",
+  "saving": "Saving…",
+  "remove": "Remove",
+  "createAccount": "Create an account",
+  "signIn": "Sign in",
+  "createShopAccountSubtitle": "Create your shop account",
+  "signInShopSubtitle": "Sign in to your shop",
+  "shopName": "Shop name",
+  "shopNameHint": "My Shop",
+  "shopNameRequired": "Shop name is required",
+  "email": "Email",
+  "emailExample": "nara@example.com",
+  "password": "Password",
+  "newPasswordHint": "Uppercase, lowercase, number and symbol (6+)",
+  "passwordHint": "At least 6 characters",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "forgotPasswordQuestion": "Forgot password?",
+  "createAccountButton": "Create account",
+  "signInButton": "Sign in",
+  "or": "or",
+  "continueWithGoogle": "Continue with Google",
+  "alreadyHaveAccount": "Already have an account? Sign in",
+  "noAccountCreate": "No account yet? Create one",
+  "emailRequired": "Please enter an email",
+  "emailInvalid": "Please enter a valid email",
+  "passwordRequired": "Please enter a password",
+  "passwordMinLength": "Password must be at least 6 characters",
+  "passwordMissingRequirements": "Missing: {requirements}",
+  "@passwordMissingRequirements": {
+    "placeholders": {
+      "requirements": {"type": "String"}
+    }
+  },
+  "sixCharactersMinimum": "at least 6 characters",
+  "oneLowercaseLetter": "one lowercase letter",
+  "oneUppercaseLetter": "one uppercase letter",
+  "oneNumber": "one number",
+  "oneSpecialCharacter": "one special character",
+  "forgotPasswordTitle": "Forgot password",
+  "forgotPasswordDescription": "We'll send you a link to reset it.",
+  "sendResetLink": "Send link",
+  "emailSent": "Email sent",
+  "resetEmailSent": "Check your inbox ({email}) and follow the link to choose a new password.",
+  "@resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "close": "Close",
+  "emailVerified": "Email verified!",
+  "openingShop": "Opening your shop…",
+  "verifyEmail": "Verify your email",
+  "verificationLinkSent": "We just sent you a verification link.",
+  "verificationLinkSentTo": "We sent a verification link to {email}. Open it; this screen will unlock automatically.",
+  "@verificationLinkSentTo": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "notVerifiedYet": "Not verified yet — open the link received by email first.",
+  "clickedVerificationLink": "I've opened the link",
+  "resendEmailCountdown": "Resend email ({seconds}s)",
+  "@resendEmailCountdown": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "resendEmail": "Resend email",
+  "cameraOffTitle": "Camera is turned off",
+  "cameraOffBody": "Turn on your camera to start scanning barcodes and items automatically.",
+  "turnOnCamera": "Turn on camera",
+  "customizeShopTitle": "Customize your shop!",
+  "customizeShopBody": "Add your shop's address and phone number so they appear on your receipts.",
+  "dontShowAgain": "Don't show again",
+  "edit": "Edit",
+  "scannedItems": "Scanned items",
+  "itemsTotal": "{count, plural, =0{No items} =1{1 item total} other{{count} items total}}",
+  "@itemsTotal": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "totalPrice": "Total price",
+  "emptyList": "List is empty",
+  "emptyListBody": "Scanned items will appear here as you scan them with the camera above.",
+  "barcodeNotFound": "No product found for barcode {barcode}.",
+  "@barcodeNotFound": {
+    "placeholders": {
+      "barcode": {"type": "String"}
+    }
+  },
+  "productAlreadyInCart": "{name} is already in the cart.",
+  "@productAlreadyInCart": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "scanBarcode": "Scan barcode",
+  "scannerTitle": "Scan barcode",
+  "alignBarcode": "Align the barcode inside the frame",
+  "checkout": "Checkout",
+  "checkoutTitle": "Checkout",
+  "printedSuccessfully": "Printed successfully",
+  "productName": "Product name",
+  "price": "Price",
+  "total": "Total",
+  "scanToPayOrangeMoney": "Scan to pay (Orange Money)",
+  "grandTotal": "Grand total",
+  "shopDetailsNotLoaded": "Shop details are not loaded",
+  "printReceipt": "Print receipt",
+  "orderSummary": "Order summary",
+  "subtotal": "Subtotal",
+  "completeSale": "Complete sale",
+  "saleCompleted": "Sale completed",
+  "productManagement": "Product management",
+  "searchProducts": "Search products",
+  "scanOrEnterBarcode": "Scan or enter a barcode",
+  "barcodeRequired": "Please enter a barcode",
+  "tapScannerIcon": "Tap the icon to open the camera scanner",
+  "openScannerHint": "Tap the icon to open the camera scanner",
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "errorMessage": "Error: {message}",
+  "@errorMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "noProducts": "No products found. Add one!",
+  "noSearchResults": "No products match your search.",
+  "noMatchingProducts": "No products match your search.",
+  "addFirstProduct": "Add your first product",
+  "addProduct": "Add product",
+  "editProduct": "Edit product",
+  "barcode": "Barcode",
+  "productNameHint": "e.g. Basmati rice",
+  "exampleProductName": "e.g. Basmati rice",
+  "productNameRequired": "Please enter a product name",
+  "stock": "Stock",
+  "invalidPrice": "Please enter a valid price",
+  "invalidStock": "Please enter a valid stock quantity",
+  "requiredField": "Required",
+  "priceRequired": "Please enter a price",
+  "priceInvalidNumber": "Please enter a valid number",
+  "priceCannotBeNegative": "Price cannot be negative",
+  "saveChanges": "Save changes",
+  "delete": "Delete",
+  "deleteProductTitle": "Delete product",
+  "deleteProductBody": "Are you sure you want to delete {name}?",
+  "@deleteProductBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "cancel": "Cancel",
+  "productAlreadyExists": "A product with barcode “{barcode}” already exists.",
+  "@productAlreadyExists": {
+    "placeholders": {
+      "barcode": {"type": "String"}
+    }
+  },
+  "productBarcodeExists": "A product with barcode “{barcode}” already exists.",
+  "@productBarcodeExists": {
+    "placeholders": {
+      "barcode": {"type": "String"}
+    }
+  },
+  "productAdded": "Product added",
+  "productUpdated": "Product updated",
+  "productDeleted": "Product deleted",
+  "generalInformation": "General information",
+  "receiptDetailsDescription": "These details will appear on your digital and printed receipts.",
+  "addressLine1": "Address line 1",
+  "addressLine1Hint": "e.g. Main Street, Douala",
+  "addressLine2Optional": "Address line 2 (optional)",
+  "addressLine2Hint": "e.g. Akwa",
+  "phoneNumber": "Phone number",
+  "phoneNumberHint": "+237 6 00 00 00 00",
+  "orangeMoneyNumber": "Orange Money number",
+  "orangeMoneyNumberHint": "6 00 00 00 00",
+  "receiptFooterText": "Receipt footer text",
+  "maxCharacters": "Maximum {count} characters",
+  "@maxCharacters": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "receiptFooterHint": "Thank you. See you again!",
+  "saveDetails": "Save details",
+  "shopDetailsSaved": "Shop details saved!",
+  "profileLoadFailed": "Unable to load your profile.",
+  "startupLoadError": "Unable to load the app. Check your internet connection and try again.",
+  "retry": "Try again"
+}

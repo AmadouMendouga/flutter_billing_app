@@ -1,0 +1,240 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Application de facturation",
+  "settings": "Paramètres",
+  "editProfile": "Modifier le profil",
+  "changePhoto": "Changer la photo",
+  "removePhoto": "Supprimer la photo",
+  "displayName": "Nom affiché",
+  "displayNameHint": "Ton nom ou le nom de ta boutique",
+  "save": "Enregistrer",
+  "preferences": "Préférences",
+  "preferenceSaveFailed": "Impossible d’enregistrer cette préférence.",
+  "language": "Langue",
+  "deviceDefault": "Langue de l’appareil",
+  "english": "Anglais",
+  "french": "Français",
+  "appearance": "Apparence",
+  "darkMode": "Mode sombre",
+  "lightMode": "Mode clair",
+  "management": "Gestion",
+  "products": "Produits",
+  "manageStockAndBarcodes": "Gérer le stock et les codes-barres",
+  "shopDetails": "Informations de la boutique",
+  "editBusinessInfoAndAddress": "Modifier les informations et l’adresse",
+  "hardware": "Matériel",
+  "printDevice": "Imprimante",
+  "printerConnected": "Imprimante connectée",
+  "noPrinterConnected": "Aucune imprimante connectée",
+  "connected": "Connectée",
+  "connectedToPrinter": "Connexion à l’imprimante réussie",
+  "bluetoothPairingInstructions": "Pour connecter un appareil, touche l’icône Paramètres, associe-le dans les réglages Bluetooth du téléphone, puis reviens et touche Actualiser.",
+  "account": "Compte",
+  "logOut": "Se déconnecter",
+  "signOutAccount": "Se déconnecter du compte de cette boutique",
+  "profileUpdated": "Profil mis à jour",
+  "profileUpdateFailed": "Le profil n’a pas pu être mis à jour.",
+  "chooseProfileImage": "Choisir une photo de profil",
+  "profileImageHelp": "Choisis une photo sur ton appareil. Elle sera redimensionnée automatiquement.",
+  "invalidImage": "Cette image ne peut pas être lue.",
+  "imageTooLarge": "Cette image est trop volumineuse. Choisis-en une autre.",
+  "nameRequired": "Saisis un nom",
+  "editProfileSubtitle": "Modifie ton nom et ta photo de profil",
+  "saving": "Enregistrement…",
+  "remove": "Supprimer",
+  "createAccount": "Créer un compte",
+  "signIn": "Se connecter",
+  "createShopAccountSubtitle": "Crée le compte de ta boutique",
+  "signInShopSubtitle": "Connecte-toi à ta boutique",
+  "shopName": "Nom de la boutique",
+  "shopNameHint": "Ma Boutique",
+  "shopNameRequired": "Le nom de la boutique est requis",
+  "email": "E-mail",
+  "emailExample": "nara@example.com",
+  "password": "Mot de passe",
+  "newPasswordHint": "Majuscule, minuscule, chiffre et symbole (6+)",
+  "passwordHint": "6 caractères minimum",
+  "showPassword": "Afficher le mot de passe",
+  "hidePassword": "Masquer le mot de passe",
+  "forgotPasswordQuestion": "Mot de passe oublié ?",
+  "createAccountButton": "Créer le compte",
+  "signInButton": "Se connecter",
+  "or": "ou",
+  "continueWithGoogle": "Continuer avec Google",
+  "alreadyHaveAccount": "Tu as déjà un compte ? Se connecter",
+  "noAccountCreate": "Pas encore de compte ? En créer un",
+  "emailRequired": "Saisis une adresse e-mail",
+  "emailInvalid": "Saisis une adresse e-mail valide",
+  "passwordRequired": "Saisis un mot de passe",
+  "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+  "passwordMissingRequirements": "Il manque : {requirements}",
+  "@passwordMissingRequirements": {
+    "placeholders": {
+      "requirements": {"type": "String"}
+    }
+  },
+  "sixCharactersMinimum": "6 caractères minimum",
+  "oneLowercaseLetter": "une minuscule",
+  "oneUppercaseLetter": "une majuscule",
+  "oneNumber": "un chiffre",
+  "oneSpecialCharacter": "un caractère spécial",
+  "forgotPasswordTitle": "Mot de passe oublié",
+  "forgotPasswordDescription": "Nous allons t’envoyer un lien pour le réinitialiser.",
+  "sendResetLink": "Envoyer le lien",
+  "emailSent": "E-mail envoyé",
+  "resetEmailSent": "Vérifie ta boîte de réception ({email}) et suis le lien pour choisir un nouveau mot de passe.",
+  "@resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "close": "Fermer",
+  "emailVerified": "E-mail vérifié !",
+  "openingShop": "Ouverture de ta boutique…",
+  "verifyEmail": "Vérifie ton e-mail",
+  "verificationLinkSent": "Nous venons de t’envoyer un lien de vérification.",
+  "verificationLinkSentTo": "Nous avons envoyé un lien de vérification à {email}. Ouvre-le : cet écran se débloquera automatiquement.",
+  "@verificationLinkSentTo": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "notVerifiedYet": "Pas encore vérifié — ouvre d’abord le lien reçu par e-mail.",
+  "clickedVerificationLink": "J’ai ouvert le lien",
+  "resendEmailCountdown": "Renvoyer l’e-mail ({seconds}s)",
+  "@resendEmailCountdown": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "resendEmail": "Renvoyer l’e-mail",
+  "cameraOffTitle": "La caméra est désactivée",
+  "cameraOffBody": "Active la caméra pour scanner automatiquement les codes-barres et les articles.",
+  "turnOnCamera": "Activer la caméra",
+  "customizeShopTitle": "Personnalise ta boutique !",
+  "customizeShopBody": "Ajoute l’adresse et le téléphone de ta boutique pour qu’ils apparaissent sur tes reçus.",
+  "dontShowAgain": "Ne plus afficher",
+  "edit": "Modifier",
+  "scannedItems": "Articles scannés",
+  "itemsTotal": "{count, plural, =0{Aucun article} =1{1 article au total} other{{count} articles au total}}",
+  "@itemsTotal": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "totalPrice": "Prix total",
+  "emptyList": "La liste est vide",
+  "emptyListBody": "Les articles apparaîtront ici à mesure que tu les scanneras avec la caméra.",
+  "barcodeNotFound": "Aucun produit ne correspond au code-barres {barcode}.",
+  "@barcodeNotFound": {
+    "placeholders": {
+      "barcode": {"type": "String"}
+    }
+  },
+  "productAlreadyInCart": "{name} est déjà dans le panier.",
+  "@productAlreadyInCart": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "scanBarcode": "Scanner un code-barres",
+  "scannerTitle": "Scanner un code-barres",
+  "alignBarcode": "Aligne le code-barres dans le cadre",
+  "checkout": "Paiement",
+  "checkoutTitle": "Paiement",
+  "printedSuccessfully": "Impression réussie",
+  "productName": "Nom du produit",
+  "price": "Prix",
+  "total": "Total",
+  "scanToPayOrangeMoney": "Scanner pour payer (Orange Money)",
+  "grandTotal": "Total général",
+  "shopDetailsNotLoaded": "Les informations de la boutique ne sont pas chargées",
+  "printReceipt": "Imprimer le reçu",
+  "orderSummary": "Récapitulatif de la commande",
+  "subtotal": "Sous-total",
+  "completeSale": "Terminer la vente",
+  "saleCompleted": "Vente terminée",
+  "productManagement": "Gestion des produits",
+  "searchProducts": "Rechercher des produits",
+  "scanOrEnterBarcode": "Scanner ou saisir un code-barres",
+  "barcodeRequired": "Saisis un code-barres",
+  "tapScannerIcon": "Touche l’icône pour ouvrir le scanner",
+  "openScannerHint": "Touche l’icône pour ouvrir le scanner",
+  "errorWithMessage": "Erreur : {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "errorMessage": "Erreur : {message}",
+  "@errorMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "noProducts": "Aucun produit. Ajoutes-en un !",
+  "noSearchResults": "Aucun produit ne correspond à ta recherche.",
+  "noMatchingProducts": "Aucun produit ne correspond à ta recherche.",
+  "addFirstProduct": "Ajouter ton premier produit",
+  "addProduct": "Ajouter un produit",
+  "editProduct": "Modifier le produit",
+  "barcode": "Code-barres",
+  "productNameHint": "Ex. : riz basmati",
+  "exampleProductName": "Ex. : riz basmati",
+  "productNameRequired": "Saisis le nom du produit",
+  "stock": "Stock",
+  "invalidPrice": "Saisis un prix valide",
+  "invalidStock": "Saisis une quantité en stock valide",
+  "requiredField": "Champ requis",
+  "priceRequired": "Saisis un prix",
+  "priceInvalidNumber": "Saisis un nombre valide",
+  "priceCannotBeNegative": "Le prix ne peut pas être négatif",
+  "saveChanges": "Enregistrer les modifications",
+  "delete": "Supprimer",
+  "deleteProductTitle": "Supprimer le produit",
+  "deleteProductBody": "Veux-tu vraiment supprimer {name} ?",
+  "@deleteProductBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "cancel": "Annuler",
+  "productAlreadyExists": "Un produit avec le code-barres « {barcode} » existe déjà.",
+  "@productAlreadyExists": {
+    "placeholders": {
+      "barcode": {"type": "String"}
+    }
+  },
+  "productBarcodeExists": "Un produit avec le code-barres « {barcode} » existe déjà.",
+  "@productBarcodeExists": {
+    "placeholders": {
+      "barcode": {"type": "String"}
+    }
+  },
+  "productAdded": "Produit ajouté",
+  "productUpdated": "Produit mis à jour",
+  "productDeleted": "Produit supprimé",
+  "generalInformation": "Informations générales",
+  "receiptDetailsDescription": "Ces informations apparaîtront sur les reçus numériques et imprimés.",
+  "addressLine1": "Adresse, ligne 1",
+  "addressLine1Hint": "Ex. : rue principale, Douala",
+  "addressLine2Optional": "Adresse, ligne 2 (facultatif)",
+  "addressLine2Hint": "Ex. : Akwa",
+  "phoneNumber": "Numéro de téléphone",
+  "phoneNumberHint": "+237 6 00 00 00 00",
+  "orangeMoneyNumber": "Numéro Orange Money",
+  "orangeMoneyNumberHint": "6 00 00 00 00",
+  "receiptFooterText": "Texte de bas de reçu",
+  "maxCharacters": "{count} caractères maximum",
+  "@maxCharacters": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "receiptFooterHint": "Merci et à bientôt !",
+  "saveDetails": "Enregistrer les informations",
+  "shopDetailsSaved": "Informations de la boutique enregistrées !",
+  "profileLoadFailed": "Impossible de charger ton profil.",
+  "startupLoadError": "Impossible de charger l'application. Vérifie ta connexion internet et réessaie.",
+  "retry": "Réessayer"
+}

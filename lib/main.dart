@@ -16,6 +16,9 @@ import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
 import 'features/settings/presentation/bloc/printer_bloc.dart';
 import 'features/settings/presentation/bloc/printer_event.dart';
+import 'features/settings/domain/entities/app_preferences.dart';
+import 'features/settings/presentation/bloc/app_preferences_cubit.dart';
+import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,25 +75,41 @@ class _StartupErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  "Impossible de charger l'application.\nVérifiez votre connexion internet et réessayez.",
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 24),
-                _RetryButton(),
-              ],
-            ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const _StartupErrorScreen(),
+    );
+  }
+}
+
+class _StartupErrorScreen extends StatelessWidget {
+  const _StartupErrorScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.wifi_off_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 16),
+              Text(l10n.startupLoadError, textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              const _RetryButton(),
+            ],
           ),
         ),
       ),
@@ -103,7 +122,10 @@ class _RetryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ElevatedButton(onPressed: main, child: Text('Réessayer'));
+    return ElevatedButton(
+      onPressed: main,
+      child: Text(AppLocalizations.of(context).retry),
+    );
   }
 }
 
@@ -114,6 +136,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<AppPreferencesCubit>.value(value: di.sl()),
         BlocProvider<AuthBloc>(
           create:
               (context) => di.sl<AuthBloc>()..add(AuthSubscriptionRequested()),
@@ -127,14 +150,24 @@ class MyApp extends StatelessWidget {
           create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent()),
         ),
       ],
-      child: AuthGate(
-        authenticatedAppBuilder:
-            (_) => MaterialApp.router(
-              title: 'Billing App',
-              theme: AppTheme.lightTheme,
-              debugShowCheckedModeBanner: false,
-              routerConfig: router,
-            ),
+      child: BlocBuilder<AppPreferencesCubit, AppPreferences>(
+        builder: (context, preferences) {
+          return MaterialApp.router(
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: preferences.themeMode,
+            locale: preferences.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            debugShowCheckedModeBanner: false,
+            routerConfig: router,
+            builder:
+                (context, child) => AuthGate(
+                  authenticatedChild: child ?? const SizedBox.shrink(),
+                ),
+          );
+        },
       ),
     );
   }

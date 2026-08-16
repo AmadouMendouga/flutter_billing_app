@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../domain/entities/shop.dart';
 
 class ShopModel extends Shop {
@@ -8,6 +12,7 @@ class ShopModel extends Shop {
     required super.phoneNumber,
     required super.upiId,
     required super.footerText,
+    super.profileImageBytes,
   });
 
   factory ShopModel.fromEntity(Shop shop) {
@@ -18,6 +23,7 @@ class ShopModel extends Shop {
       phoneNumber: shop.phoneNumber,
       upiId: shop.upiId,
       footerText: shop.footerText,
+      profileImageBytes: shop.profileImageBytes,
     );
   }
 
@@ -29,11 +35,12 @@ class ShopModel extends Shop {
       phoneNumber: map['phoneNumber'] as String? ?? '',
       upiId: map['upiId'] as String? ?? '',
       footerText: map['footerText'] as String? ?? '',
+      profileImageBytes: _profileImageFromMap(map['profileImage']),
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'name': name,
       'addressLine1': addressLine1,
       'addressLine2': addressLine2,
@@ -41,7 +48,19 @@ class ShopModel extends Shop {
       'upiId': upiId,
       'footerText': footerText,
     };
+    final imageBytes = profileImageBytes;
+    if (imageBytes != null && imageBytes.isNotEmpty) {
+      map['profileImage'] = Blob(imageBytes);
+    }
+    return map;
   }
 
   Shop toEntity() => this;
+
+  static Uint8List? _profileImageFromMap(Object? value) {
+    if (value case final Blob blob) return blob.bytes;
+    if (value case final Uint8List bytes) return bytes;
+    if (value case final List<int> bytes) return Uint8List.fromList(bytes);
+    return null;
+  }
 }

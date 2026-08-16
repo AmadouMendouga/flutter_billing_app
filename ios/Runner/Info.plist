@@ -53,5 +53,7 @@
 	<string>We need bluetooth to connect to thermal printers.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need location access to find nearby printers.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a profile picture for your shop account.</string>
 </dict>
 </plist>

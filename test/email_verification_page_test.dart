@@ -3,18 +3,17 @@ import 'package:billing_app/features/auth/domain/entities/app_user.dart';
 import 'package:billing_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:billing_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:billing_app/features/auth/presentation/pages/email_verification_page.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 void main() {
-  testWidgets('a verified email shows the success motion before continuing',
-      (tester) async {
-    const pendingUser = AppUser(
-      uid: 'user-1',
-      email: 'shop@example.com',
-    );
+  testWidgets('a verified email shows the success motion before continuing', (
+    tester,
+  ) async {
+    const pendingUser = AppUser(uid: 'user-1', email: 'shop@example.com');
     const verifiedUser = AppUser(
       uid: 'user-1',
       email: 'shop@example.com',
@@ -28,16 +27,19 @@ void main() {
       BlocProvider.value(
         value: bloc,
         child: const MaterialApp(
+          locale: Locale('fr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: EmailVerificationPage(user: pendingUser),
         ),
       ),
     );
     await tester.pump();
 
-    await tester.tap(find.text('J\'ai cliqué sur le lien'));
+    await tester.tap(find.text('J’ai ouvert le lien'));
     await tester.pump();
 
-    expect(find.text('Email vérifié !'), findsOneWidget);
+    expect(find.text('E-mail vérifié !'), findsOneWidget);
     expect(find.byIcon(Icons.check_rounded), findsOneWidget);
     expect(bloc.state, isA<AuthInitial>());
 

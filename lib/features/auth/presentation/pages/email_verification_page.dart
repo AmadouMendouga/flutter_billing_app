@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/app_user.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -62,8 +63,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
       curve: const Interval(0.62, 1, curve: Curves.easeOut),
     );
     _sendLink();
-    _autoCheckTimer =
-        Timer.periodic(_autoCheckInterval, (_) => _checkStatus(silent: true));
+    _autoCheckTimer = Timer.periodic(
+      _autoCheckInterval,
+      (_) => _checkStatus(silent: true),
+    );
   }
 
   @override
@@ -141,8 +144,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
         if (!silent) {
           setState(() {
             _isChecking = false;
-            _error =
-                "Pas encore vérifié — clique d'abord le lien reçu par email.";
+            _error = AppLocalizations.of(context).notVerifiedYet;
           });
         }
       },
@@ -168,6 +170,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -223,70 +226,85 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
                     const SizedBox(height: 16),
                     FadeTransition(
                       opacity: _messageOpacity,
-                      child: const Column(
+                      child: Column(
                         children: [
                           Text(
-                            'Email vérifié !',
+                            l10n.emailVerified,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            'Ouverture de ta boutique…',
+                            l10n.openingShop,
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ] else ...[
-                    const Icon(Icons.mark_email_unread,
-                        size: 56, color: AppTheme.primaryColor),
+                    const Icon(
+                      Icons.mark_email_unread,
+                      size: 56,
+                      color: AppTheme.primaryColor,
+                    ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Vérifie ton email',
+                    Text(
+                      l10n.verifyEmail,
                       textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.user.email == null
-                          ? 'On vient de t\'envoyer un lien de vérification.'
-                          : 'On vient d\'envoyer un lien de vérification à ${widget.user.email}. Clique dessus, cet écran se débloque automatiquement.',
+                          ? l10n.verificationLinkSent
+                          : l10n.verificationLinkSentTo(widget.user.email!),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[500]),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     if (_error != null) ...[
-                      Text(_error!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red)),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                       const SizedBox(height: 8),
                     ],
                     PrimaryButton(
                       onPressed: _isChecking ? null : () => _checkStatus(),
                       isLoading: _isChecking,
                       icon: Icons.check_circle_outline,
-                      label: 'J\'ai cliqué sur le lien',
+                      label: l10n.clickedVerificationLink,
                     ),
                     TextButton(
-                      onPressed: (_isSending || _cooldownSeconds > 0)
-                          ? null
-                          : _sendLink,
+                      onPressed:
+                          (_isSending || _cooldownSeconds > 0)
+                              ? null
+                              : _sendLink,
                       child: Text(
                         _cooldownSeconds > 0
-                            ? 'Renvoyer l\'email (${_cooldownSeconds}s)'
-                            : 'Renvoyer l\'email',
+                            ? l10n.resendEmailCountdown(_cooldownSeconds)
+                            : l10n.resendEmail,
                       ),
                     ),
                     TextButton(
-                      onPressed: () =>
-                          context.read<AuthBloc>().add(LogOutRequested()),
-                      child: const Text('Se déconnecter'),
+                      onPressed:
+                          () => context.read<AuthBloc>().add(LogOutRequested()),
+                      child: Text(l10n.logOut),
                     ),
                   ],
                 ],

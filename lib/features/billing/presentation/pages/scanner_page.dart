@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -106,9 +107,9 @@ class _ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
           ),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Scan Barcode',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          AppLocalizations.of(context).scannerTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
       body: LayoutBuilder(
@@ -151,14 +152,14 @@ class _ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-              const Positioned(
+              Positioned(
                 bottom: 40,
                 left: 0,
                 right: 0,
                 child: Text(
-                  'Aligne le code-barres dans le cadre',
+                  AppLocalizations.of(context).alignBarcode,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ],

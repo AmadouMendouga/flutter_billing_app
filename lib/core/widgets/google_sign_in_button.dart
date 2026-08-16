@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:billing_app/l10n/app_localizations.dart';
+
 /// The canonical multi-color Google "G" mark, per Google's official
 /// branding guidelines for "Sign in with Google" buttons.
 const _googleLogoSvg = '''
@@ -16,13 +18,9 @@ const _googleLogoSvg = '''
 /// branded sign-in buttons (white background, subtle border, Google "G").
 class GoogleSignInButton extends StatelessWidget {
   final VoidCallback? onPressed;
-  final String label;
+  final String? label;
 
-  const GoogleSignInButton({
-    super.key,
-    required this.onPressed,
-    this.label = 'Continuer avec Google',
-  });
+  const GoogleSignInButton({super.key, required this.onPressed, this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +44,7 @@ class GoogleSignInButton extends StatelessWidget {
               const SizedBox(width: 12),
               Flexible(
                 child: Text(
-                  label,
+                  label ?? AppLocalizations.of(context).continueWithGoogle,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: const TextStyle(

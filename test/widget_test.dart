@@ -4,6 +4,7 @@ import 'package:billing_app/features/auth/domain/repositories/auth_repository.da
 import 'package:billing_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:billing_app/features/auth/presentation/pages/auth_page.dart';
 import 'package:billing_app/core/widgets/google_sign_in_button.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -81,7 +82,12 @@ void main() {
 Widget _buildAuthPage() {
   return BlocProvider(
     create: (_) => AuthBloc(authRepository: _FakeAuthRepository()),
-    child: const MaterialApp(home: AuthPage()),
+    child: const MaterialApp(
+      locale: Locale('fr'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: AuthPage(),
+    ),
   );
 }
 
