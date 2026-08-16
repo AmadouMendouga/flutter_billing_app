@@ -564,4 +564,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Try again';
+
+  @override
+  String get invoiceTitle => 'Invoice';
+
+  @override
+  String get invoiceDate => 'Date';
+
+  @override
+  String get invoiceAddress => 'Address';
+
+  @override
+  String get sendInvoiceWhatsApp => 'Send invoice via WhatsApp';
+
+  @override
+  String get openingWhatsApp => 'Opening WhatsApp…';
+
+  @override
+  String get whatsAppShareFailed =>
+      'Unable to open WhatsApp. Check that it is installed and try again.';
+
+  @override
+  String get emptyInvoiceCannotShare =>
+      'Add at least one item before sharing the invoice.';
 }

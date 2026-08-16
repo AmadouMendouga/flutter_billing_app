@@ -1,4 +1,3 @@
-import 'package:billing_app/core/widgets/primary_button.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,16 +5,67 @@ import 'package:go_router/go_router.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../domain/services/whatsapp_invoice_service.dart';
 import '../bloc/billing_bloc.dart';
+import '../services/invoice_message_builder.dart';
 
 class CheckoutPage extends StatefulWidget {
-  const CheckoutPage({super.key});
+  const CheckoutPage({
+    super.key,
+    required this.whatsAppInvoiceService,
+    this.messageBuilder = const InvoiceMessageBuilder(),
+    this.now = DateTime.now,
+  });
+
+  final WhatsAppInvoiceService whatsAppInvoiceService;
+  final InvoiceMessageBuilder messageBuilder;
+  final DateTime Function() now;
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  bool _isSharingInvoice = false;
+
+  Future<void> _shareInvoice(
+    BillingState billingState,
+    ShopState shopState,
+  ) async {
+    if (_isSharingInvoice) return;
+    final localizations = AppLocalizations.of(context);
+    if (billingState.cartItems.isEmpty) {
+      _showError(localizations.emptyInvoiceCannotShare);
+      return;
+    }
+    if (shopState is! ShopLoaded) {
+      _showError(localizations.shopDetailsNotLoaded);
+      return;
+    }
+
+    final message = widget.messageBuilder.build(
+      localizations: localizations,
+      shop: shopState.shop,
+      items: billingState.cartItems,
+      issuedAt: widget.now(),
+    );
+    setState(() => _isSharingInvoice = true);
+    try {
+      await widget.whatsAppInvoiceService.share(message);
+    } catch (_) {
+      if (mounted) _showError(localizations.whatsAppShareFailed);
+    } finally {
+      if (mounted) setState(() => _isSharingInvoice = false);
+    }
+  }
+
+  void _showError(String message) {
+    final scheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: scheme.error),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -262,34 +312,77 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               ],
                             ),
                           ),
-                          PrimaryButton(
-                            onPressed: () {
-                              if (shopState is ShopLoaded) {
-                                context.read<BillingBloc>().add(
-                                  PrintReceiptEvent(
-                                    shopName: shopState.shop.name,
-                                    address1: shopState.shop.addressLine1,
-                                    address2: shopState.shop.addressLine2,
-                                    phone: shopState.shop.phoneNumber,
-                                    footer: shopState.shop.footerText,
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      ).shopDetailsNotLoaded,
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
-                            label: AppLocalizations.of(context).printReceipt,
-                            icon: Icons.print,
-                            isLoading: billingState.isPrinting,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                            child: Column(
+                              children: [
+                                _buildActionButton(
+                                  key: const ValueKey('send-invoice-whatsapp'),
+                                  onPressed:
+                                      _isSharingInvoice ||
+                                              billingState.isPrinting
+                                          ? null
+                                          : () => _shareInvoice(
+                                            billingState,
+                                            shopState,
+                                          ),
+                                  icon: Icons.chat_bubble_outline_rounded,
+                                  label:
+                                      _isSharingInvoice
+                                          ? AppLocalizations.of(
+                                            context,
+                                          ).openingWhatsApp
+                                          : AppLocalizations.of(
+                                            context,
+                                          ).sendInvoiceWhatsApp,
+                                  isLoading: _isSharingInvoice,
+                                  backgroundColor: const Color(0xFF075E54),
+                                  foregroundColor: Colors.white,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildActionButton(
+                                  onPressed:
+                                      billingState.isPrinting ||
+                                              _isSharingInvoice
+                                          ? null
+                                          : () {
+                                            if (shopState is ShopLoaded) {
+                                              context.read<BillingBloc>().add(
+                                                PrintReceiptEvent(
+                                                  shopName: shopState.shop.name,
+                                                  address1:
+                                                      shopState
+                                                          .shop
+                                                          .addressLine1,
+                                                  address2:
+                                                      shopState
+                                                          .shop
+                                                          .addressLine2,
+                                                  phone:
+                                                      shopState
+                                                          .shop
+                                                          .phoneNumber,
+                                                  footer:
+                                                      shopState.shop.footerText,
+                                                ),
+                                              );
+                                            } else {
+                                              _showError(
+                                                AppLocalizations.of(
+                                                  context,
+                                                ).shopDetailsNotLoaded,
+                                              );
+                                            }
+                                          },
+                                  icon: Icons.print,
+                                  label:
+                                      AppLocalizations.of(context).printReceipt,
+                                  isLoading: billingState.isPrinting,
+                                  backgroundColor: scheme.primary,
+                                  foregroundColor: scheme.onPrimary,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -315,6 +408,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
           fontWeight: FontWeight.bold,
           letterSpacing: 1,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    Key? key,
+    required VoidCallback? onPressed,
+    required IconData icon,
+    required String label,
+    required bool isLoading,
+    required Color backgroundColor,
+    required Color foregroundColor,
+  }) {
+    return SizedBox(
+      key: key,
+      width: double.infinity,
+      height: 50,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          disabledBackgroundColor: backgroundColor.withValues(alpha: 0.55),
+          disabledForegroundColor: foregroundColor.withValues(alpha: 0.85),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        icon:
+            isLoading
+                ? SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: foregroundColor,
+                  ),
+                )
+                : Icon(icon),
+        label: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );

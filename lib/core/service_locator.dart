@@ -17,6 +17,8 @@ import '../../features/settings/presentation/bloc/printer_bloc.dart';
 import '../../features/settings/data/repositories/hive_app_preferences_repository.dart';
 import '../../features/settings/domain/repositories/app_preferences_repository.dart';
 import '../../features/settings/presentation/bloc/app_preferences_cubit.dart';
+import '../../features/billing/data/services/url_launcher_whatsapp_invoice_service.dart';
+import '../../features/billing/domain/services/whatsapp_invoice_service.dart';
 import 'services/scan_feedback_service.dart';
 
 final sl = GetIt.instance;
@@ -26,6 +28,9 @@ Future<void> init() async {
     () => HiveAppPreferencesRepository(box: HiveDatabase.settingsBox),
   );
   sl.registerLazySingleton(() => AppPreferencesCubit(repository: sl()));
+  sl.registerLazySingleton<WhatsAppInvoiceService>(
+    UrlLauncherWhatsAppInvoiceService.new,
+  );
 
   final scanFeedback = await ScanFeedbackService.create();
   sl.registerSingleton<ScanFeedback>(

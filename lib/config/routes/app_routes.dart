@@ -20,7 +20,8 @@ final router = GoRouter(
       routes: [
         GoRoute(
           path: 'checkout',
-          builder: (context, state) => const CheckoutPage(),
+          builder:
+              (context, state) => CheckoutPage(whatsAppInvoiceService: di.sl()),
         ),
       ],
     ),

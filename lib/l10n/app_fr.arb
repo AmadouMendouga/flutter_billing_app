@@ -236,5 +236,12 @@
   "shopDetailsSaved": "Informations de la boutique enregistrées !",
   "profileLoadFailed": "Impossible de charger ton profil.",
   "startupLoadError": "Impossible de charger l'application. Vérifie ta connexion internet et réessaie.",
-  "retry": "Réessayer"
+  "retry": "Réessayer",
+  "invoiceTitle": "Facture",
+  "invoiceDate": "Date",
+  "invoiceAddress": "Adresse",
+  "sendInvoiceWhatsApp": "Envoyer la facture par WhatsApp",
+  "openingWhatsApp": "Ouverture de WhatsApp…",
+  "whatsAppShareFailed": "Impossible d’ouvrir WhatsApp. Vérifie qu’il est installé puis réessaie.",
+  "emptyInvoiceCannotShare": "Ajoute au moins un article avant de partager la facture."
 }

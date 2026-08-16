@@ -1129,6 +1129,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get retry;
+
+  /// No description provided for @invoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice'**
+  String get invoiceTitle;
+
+  /// No description provided for @invoiceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get invoiceDate;
+
+  /// No description provided for @invoiceAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get invoiceAddress;
+
+  /// No description provided for @sendInvoiceWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send invoice via WhatsApp'**
+  String get sendInvoiceWhatsApp;
+
+  /// No description provided for @openingWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening WhatsApp…'**
+  String get openingWhatsApp;
+
+  /// No description provided for @whatsAppShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open WhatsApp. Check that it is installed and try again.'**
+  String get whatsAppShareFailed;
+
+  /// No description provided for @emptyInvoiceCannotShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one item before sharing the invoice.'**
+  String get emptyInvoiceCannotShare;
 }
 
 class _AppLocalizationsDelegate

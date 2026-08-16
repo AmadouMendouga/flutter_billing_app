@@ -236,5 +236,12 @@
   "shopDetailsSaved": "Shop details saved!",
   "profileLoadFailed": "Unable to load your profile.",
   "startupLoadError": "Unable to load the app. Check your internet connection and try again.",
-  "retry": "Try again"
+  "retry": "Try again",
+  "invoiceTitle": "Invoice",
+  "invoiceDate": "Date",
+  "invoiceAddress": "Address",
+  "sendInvoiceWhatsApp": "Send invoice via WhatsApp",
+  "openingWhatsApp": "Opening WhatsApp…",
+  "whatsAppShareFailed": "Unable to open WhatsApp. Check that it is installed and try again.",
+  "emptyInvoiceCannotShare": "Add at least one item before sharing the invoice."
 }
