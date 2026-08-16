@@ -7,11 +7,9 @@ import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/pages/auth_page.dart';
-import 'features/auth/presentation/pages/email_verification_page.dart';
+import 'features/auth/presentation/widgets/auth_gate.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
-import 'features/shop/domain/entities/shop.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
 import 'features/settings/presentation/bloc/printer_bloc.dart';
 import 'features/settings/presentation/bloc/printer_event.dart';
@@ -114,74 +112,14 @@ class MyApp extends StatelessWidget {
         BlocProvider<PrinterBloc>(
             create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent())),
       ],
-      child: const _AuthGate(),
-    );
-  }
-}
-
-/// Shows the login/signup flow while unauthenticated, and the app's normal
-/// routed screens once signed in. Each branch owns a complete, separate
-/// MaterialApp rather than nesting a second Router inside a shared one.
-/// Also keeps ProductBloc/ShopBloc in sync with the current account:
-/// reloads their data on sign-in, and clears it on sign-out so the next
-/// account never briefly sees the previous one's shop/products.
-class _AuthGate extends StatelessWidget {
-  const _AuthGate();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated && state.user.emailVerified) {
-          context.read<ProductBloc>().add(LoadProducts());
-          context.read<ShopBloc>().add(LoadShopEvent());
-          final shopName = state.pendingShopName;
-          if (shopName != null && shopName.isNotEmpty) {
-            context
-                .read<ShopBloc>()
-                .add(UpdateShopEvent(Shop(name: shopName)));
-          }
-        } else if (state is AuthUnauthenticated) {
-          context.read<ProductBloc>().add(ClearProducts());
-          context.read<ShopBloc>().add(ClearShopEvent());
-        }
-      },
-      builder: (context, state) {
-        if (state is AuthAuthenticated && !state.user.emailVerified) {
-          return MaterialApp(
-            title: 'Billing App',
-            theme: AppTheme.lightTheme,
-            debugShowCheckedModeBanner: false,
-            home: EmailVerificationPage(user: state.user),
-          );
-        }
-        if (state is AuthAuthenticated) {
-          return MaterialApp.router(
-            title: 'Billing App',
-            theme: AppTheme.lightTheme,
-            debugShowCheckedModeBanner: false,
-            routerConfig: router,
-          );
-        }
-        if (state is AuthUnauthenticated || state is AuthError) {
-          return MaterialApp(
-            title: 'Billing App',
-            theme: AppTheme.lightTheme,
-            debugShowCheckedModeBanner: false,
-            home: const AuthPage(),
-          );
-        }
-        // AuthInitial / AuthLoading: still resolving whether a session is
-        // already persisted — avoid flashing the login screen.
-        return MaterialApp(
+      child: AuthGate(
+        authenticatedAppBuilder: (_) => MaterialApp.router(
           title: 'Billing App',
           theme: AppTheme.lightTheme,
           debugShowCheckedModeBanner: false,
-          home: const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
-        );
-      },
+          routerConfig: router,
+        ),
+      ),
     );
   }
 }

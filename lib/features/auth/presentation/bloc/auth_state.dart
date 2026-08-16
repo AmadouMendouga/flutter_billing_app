@@ -10,11 +10,17 @@ abstract class AuthState extends Equatable {
 class AuthInitial extends AuthState {}
 
 /// Auth state is unknown: either resolving the persisted session at cold
-/// start, or a sign-up/log-in request is in flight.
+/// start.
 class AuthLoading extends AuthState {}
+
+/// A sign-up/log-in request is in flight while the authentication form stays
+/// mounted. Keeping this separate from [AuthLoading] preserves the selected
+/// form mode and lets the page display any eventual error.
+class AuthSubmitting extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
   final AppUser user;
+
   /// Shop name entered on the sign-up form, to be saved once. Null for
   /// logins/session restores, where there's nothing new to save.
   final String? pendingShopName;

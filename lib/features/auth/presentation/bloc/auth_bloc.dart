@@ -39,7 +39,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onUserChanged(AuthUserChanged event, Emitter<AuthState> emit) {
-    final user = event.user;
+    // Firebase can deliver a queued null event while another authentication
+    // request has already established a session. Always reconcile that event
+    // with the repository's current value before sending the user back to the
+    // authentication form.
+    final user = event.user ?? authRepository.currentUser;
     if (user != null) {
       final shopName = _pendingShopName;
       if (user.emailVerified) {
@@ -54,12 +58,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onSignUpRequested(
       SignUpRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
+    emit(AuthSubmitting());
+    _pendingShopName = event.shopName;
     final result = await authRepository.signUp(event.email, event.password);
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) {
+        final currentUser = authRepository.currentUser;
+        if (currentUser != null) {
+          emit(AuthAuthenticated(currentUser,
+              pendingShopName: _pendingShopName));
+          return;
+        }
+        _pendingShopName = null;
+        emit(AuthError(failure.message));
+      },
       (user) {
-        _pendingShopName = event.shopName;
         emit(AuthAuthenticated(user, pendingShopName: event.shopName));
       },
     );
@@ -67,22 +80,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onLogInRequested(
       LogInRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
+    emit(AuthSubmitting());
     final result = await authRepository.logIn(event.email, event.password);
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) => _emitCurrentUserOrError(emit, failure.message),
       (user) => emit(AuthAuthenticated(user)),
     );
   }
 
   Future<void> _onGoogleSignInRequested(
       GoogleSignInRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
+    emit(AuthSubmitting());
     final result = await authRepository.signInWithGoogle();
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) => _emitCurrentUserOrError(emit, failure.message),
       (user) => emit(AuthAuthenticated(user)),
     );
+  }
+
+  void _emitCurrentUserOrError(Emitter<AuthState> emit, String errorMessage) {
+    final currentUser = authRepository.currentUser;
+    if (currentUser != null) {
+      emit(AuthAuthenticated(currentUser, pendingShopName: _pendingShopName));
+      return;
+    }
+    emit(AuthError(errorMessage));
   }
 
   Future<void> _onLogOutRequested(
