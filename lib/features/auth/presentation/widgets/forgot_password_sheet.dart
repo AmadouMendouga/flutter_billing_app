@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/email_delivery_hint.dart';
 import '../../../../core/widgets/input_label.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -168,6 +169,8 @@ class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: 12),
+        const EmailDeliveryHint(),
         const SizedBox(height: 16),
         PrimaryButton(
           onPressed: () => Navigator.of(context).pop(),

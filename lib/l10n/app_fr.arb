@@ -82,6 +82,7 @@
   "forgotPasswordDescription": "Nous allons t’envoyer un lien pour le réinitialiser.",
   "sendResetLink": "Envoyer le lien",
   "emailSent": "E-mail envoyé",
+  "checkSpamFolder": "Si tu ne trouves pas l’e-mail, vérifie le dossier Spam ou Courrier indésirable.",
   "resetEmailSent": "Vérifie ta boîte de réception ({email}) et suis le lien pour choisir un nouveau mot de passe.",
   "@resetEmailSent": {
     "placeholders": {

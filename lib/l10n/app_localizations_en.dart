@@ -244,6 +244,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailSent => 'Email sent';
 
   @override
+  String get checkSpamFolder =>
+      'If you can’t find the email, check your Spam or Junk folder.';
+
+  @override
   String resetEmailSent(String email) {
     return 'Check your inbox ($email) and follow the link to choose a new password.';
   }

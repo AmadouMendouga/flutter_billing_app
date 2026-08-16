@@ -560,6 +560,12 @@ abstract class AppLocalizations {
   /// **'Email sent'**
   String get emailSent;
 
+  /// No description provided for @checkSpamFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'If you can’t find the email, check your Spam or Junk folder.'**
+  String get checkSpamFolder;
+
   /// No description provided for @resetEmailSent.
   ///
   /// In en, this message translates to:

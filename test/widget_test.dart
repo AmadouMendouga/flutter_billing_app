@@ -77,6 +77,27 @@ void main() {
       expect(editablePassword().obscureText, isTrue);
     },
   );
+
+  testWidgets('password reset success tells the user to check spam', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildAuthPage());
+
+    await tester.tap(find.text('Mot de passe oublié ?'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).last, 'shop@example.com');
+    await tester.tap(find.text('Envoyer le lien'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('E-mail envoyé'), findsOneWidget);
+    expect(
+      find.text(
+        'Si tu ne trouves pas l’e-mail, vérifie le dossier Spam ou '
+        'Courrier indésirable.',
+      ),
+      findsOneWidget,
+    );
+  });
 }
 
 Widget _buildAuthPage() {
@@ -115,7 +136,7 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> sendPasswordResetEmail(String email) {
-    throw UnimplementedError();
+    return Future.value(const Right(null));
   }
 
   @override

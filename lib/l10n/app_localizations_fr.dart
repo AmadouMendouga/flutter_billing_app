@@ -249,6 +249,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emailSent => 'E-mail envoyé';
 
   @override
+  String get checkSpamFolder =>
+      'Si tu ne trouves pas l’e-mail, vérifie le dossier Spam ou Courrier indésirable.';
+
+  @override
   String resetEmailSent(String email) {
     return 'Vérifie ta boîte de réception ($email) et suis le lien pour choisir un nouveau mot de passe.';
   }

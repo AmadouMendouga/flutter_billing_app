@@ -36,6 +36,14 @@ void main() {
     );
     await tester.pump();
 
+    expect(
+      find.text(
+        'Si tu ne trouves pas l’e-mail, vérifie le dossier Spam ou '
+        'Courrier indésirable.',
+      ),
+      findsOneWidget,
+    );
+
     await tester.tap(find.text('J’ai ouvert le lien'));
     await tester.pump();
 

@@ -82,6 +82,7 @@
   "forgotPasswordDescription": "We'll send you a link to reset it.",
   "sendResetLink": "Send link",
   "emailSent": "Email sent",
+  "checkSpamFolder": "If you can’t find the email, check your Spam or Junk folder.",
   "resetEmailSent": "Check your inbox ({email}) and follow the link to choose a new password.",
   "@resetEmailSent": {
     "placeholders": {

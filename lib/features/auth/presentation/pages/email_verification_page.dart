@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/email_delivery_hint.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/app_user.dart';
@@ -275,7 +276,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    const EmailDeliveryHint(),
+                    const SizedBox(height: 16),
                     if (_error != null) ...[
                       Text(
                         _error!,
