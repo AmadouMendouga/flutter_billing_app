@@ -13,10 +13,14 @@ void main() {
     );
     const message = 'Facture café & savon\nTotal : 3 500 FCFA';
 
-    await service.share(message);
+    await service.share(
+      recipientPhoneNumber: '+237 699 00 11 22',
+      message: message,
+    );
 
     expect(launchedUri?.scheme, 'https');
     expect(launchedUri?.host, 'wa.me');
+    expect(launchedUri?.path, '/237699001122');
     expect(launchedUri?.queryParameters['text'], message);
   });
 
@@ -26,7 +30,7 @@ void main() {
     );
 
     await expectLater(
-      service.share('invoice'),
+      service.share(recipientPhoneNumber: '699001122', message: 'invoice'),
       throwsA(isA<WhatsAppInvoiceShareException>()),
     );
   });
@@ -37,8 +41,17 @@ void main() {
     );
 
     await expectLater(
-      service.share('invoice'),
+      service.share(recipientPhoneNumber: '699001122', message: 'invoice'),
       throwsA(isA<WhatsAppInvoiceShareException>()),
     );
+  });
+
+  test('normalizes local and international customer numbers', () {
+    expect(normalizeWhatsAppPhoneNumber('6 99 00 11 22'), '237699001122');
+    expect(normalizeWhatsAppPhoneNumber('+237 699 00 11 22'), '237699001122');
+    expect(normalizeWhatsAppPhoneNumber('00237 699 00 11 22'), '237699001122');
+    expect(normalizeWhatsAppPhoneNumber('+33 6 12 34 56 78'), '33612345678');
+    expect(normalizeWhatsAppPhoneNumber('123'), isNull);
+    expect(normalizeWhatsAppPhoneNumber('client 699001122'), isNull);
   });
 }

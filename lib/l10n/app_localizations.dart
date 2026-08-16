@@ -1171,6 +1171,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add at least one item before sharing the invoice.'**
   String get emptyInvoiceCannotShare;
+
+  /// No description provided for @clientWhatsAppNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer WhatsApp number'**
+  String get clientWhatsAppNumber;
+
+  /// No description provided for @clientWhatsAppNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'+237 6 99 00 00 00'**
+  String get clientWhatsAppNumberHint;
+
+  /// No description provided for @clientWhatsAppNumberHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The number is used only to open the conversation and will not be saved.'**
+  String get clientWhatsAppNumberHelp;
+
+  /// No description provided for @clientPhoneNumberRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the customer\'s number.'**
+  String get clientPhoneNumberRequired;
+
+  /// No description provided for @invalidWhatsAppNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number with its country code.'**
+  String get invalidWhatsAppNumber;
+
+  /// No description provided for @continueToWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to WhatsApp'**
+  String get continueToWhatsApp;
 }
 
 class _AppLocalizationsDelegate

@@ -243,5 +243,11 @@
   "sendInvoiceWhatsApp": "Send invoice via WhatsApp",
   "openingWhatsApp": "Opening WhatsApp…",
   "whatsAppShareFailed": "Unable to open WhatsApp. Check that it is installed and try again.",
-  "emptyInvoiceCannotShare": "Add at least one item before sharing the invoice."
+  "emptyInvoiceCannotShare": "Add at least one item before sharing the invoice.",
+  "clientWhatsAppNumber": "Customer WhatsApp number",
+  "clientWhatsAppNumberHint": "+237 6 99 00 00 00",
+  "clientWhatsAppNumberHelp": "The number is used only to open the conversation and will not be saved.",
+  "clientPhoneNumberRequired": "Enter the customer's number.",
+  "invalidWhatsAppNumber": "Enter a valid number with its country code.",
+  "continueToWhatsApp": "Continue to WhatsApp"
 }

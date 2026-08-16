@@ -70,12 +70,45 @@ void main() {
     await tester.ensureVisible(button);
     await tester.tap(button);
     await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('whatsapp-phone-field')),
+      '6 99 00 11 22',
+    );
+    await tester.tap(find.byKey(const ValueKey('continue-to-whatsapp')));
+    await tester.pumpAndSettle();
 
     expect(service.messages, hasLength(1));
+    expect(service.phoneNumbers, ['237699001122']);
     expect(service.messages.single, contains('Ma Boutique'));
     expect(service.messages.single, contains('Savon'));
     expect(service.messages.single, contains('*TOTAL: 1500 FCFA*'));
   });
+
+  testWidgets(
+    'WhatsApp is optional and the customer number dialog can cancel',
+    (tester) async {
+      final service = _FakeWhatsAppInvoiceService();
+      await tester.binding.setSurfaceSize(const Size(900, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(_buildCheckout(billingBloc, shopBloc, service));
+
+      final button = find.byKey(const ValueKey('send-invoice-whatsapp'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('whatsapp-phone-field')),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('whatsapp-phone-field')), findsNothing);
+      expect(service.messages, isEmpty);
+      expect(find.text('Imprimer le reçu'), findsOneWidget);
+    },
+  );
 
   testWidgets('a WhatsApp launch failure is visible and unlocks the button', (
     tester,
@@ -91,6 +124,12 @@ void main() {
     await tester.ensureVisible(button);
     await tester.tap(button);
     await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('whatsapp-phone-field')),
+      '+237 699 00 11 22',
+    );
+    await tester.tap(find.byKey(const ValueKey('continue-to-whatsapp')));
+    await tester.pumpAndSettle();
 
     expect(
       find.text(
@@ -99,7 +138,7 @@ void main() {
       findsOneWidget,
     );
     final action = tester.widget<FilledButton>(
-      find.descendant(of: button, matching: find.byType(FilledButton)),
+      find.byKey(const ValueKey('continue-to-whatsapp')),
     );
     expect(action.onPressed, isNotNull);
   });
@@ -115,12 +154,18 @@ void main() {
     final button = find.byKey(const ValueKey('send-invoice-whatsapp'));
     await tester.ensureVisible(button);
     await tester.tap(button);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('whatsapp-phone-field')),
+      '699001122',
+    );
+    await tester.tap(find.byKey(const ValueKey('continue-to-whatsapp')));
     await tester.pump();
 
     expect(service.messages, hasLength(1));
-    expect(find.text('Ouverture de WhatsApp…'), findsOneWidget);
+    expect(find.text('Ouverture de WhatsApp…'), findsWidgets);
     final action = tester.widget<FilledButton>(
-      find.descendant(of: button, matching: find.byType(FilledButton)),
+      find.byKey(const ValueKey('continue-to-whatsapp')),
     );
     expect(action.onPressed, isNull);
 
@@ -153,11 +198,16 @@ Widget _buildCheckout(
 
 final class _FakeWhatsAppInvoiceService implements WhatsAppInvoiceService {
   final messages = <String>[];
+  final phoneNumbers = <String>[];
   Object? error;
   Completer<void>? pending;
 
   @override
-  Future<void> share(String message) async {
+  Future<void> share({
+    required String recipientPhoneNumber,
+    required String message,
+  }) async {
+    phoneNumbers.add(recipientPhoneNumber);
     messages.add(message);
     final currentError = error;
     if (currentError != null) throw currentError;

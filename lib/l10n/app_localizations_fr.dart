@@ -595,4 +595,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get emptyInvoiceCannotShare =>
       'Ajoute au moins un article avant de partager la facture.';
+
+  @override
+  String get clientWhatsAppNumber => 'Numéro WhatsApp du client';
+
+  @override
+  String get clientWhatsAppNumberHint => '+237 6 99 00 00 00';
+
+  @override
+  String get clientWhatsAppNumberHelp =>
+      'Le numéro sert uniquement à ouvrir la conversation et ne sera pas enregistré.';
+
+  @override
+  String get clientPhoneNumberRequired => 'Saisis le numéro du client.';
+
+  @override
+  String get invalidWhatsAppNumber =>
+      'Saisis un numéro valide avec son indicatif pays.';
+
+  @override
+  String get continueToWhatsApp => 'Continuer vers WhatsApp';
 }

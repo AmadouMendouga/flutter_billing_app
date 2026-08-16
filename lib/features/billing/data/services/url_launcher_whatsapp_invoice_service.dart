@@ -12,8 +12,13 @@ Future<bool> _launchExternally(Uri uri) {
   );
 }
 
-Uri buildWhatsAppInvoiceUri(String message) {
-  return Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
+Uri buildWhatsAppInvoiceUri({
+  required String recipientPhoneNumber,
+  required String message,
+}) {
+  return Uri.parse(
+    'https://wa.me/$recipientPhoneNumber?text=${Uri.encodeComponent(message)}',
+  );
 }
 
 final class UrlLauncherWhatsAppInvoiceService
@@ -24,9 +29,23 @@ final class UrlLauncherWhatsAppInvoiceService
   final WhatsAppUrlLauncher _launcher;
 
   @override
-  Future<void> share(String message) async {
+  Future<void> share({
+    required String recipientPhoneNumber,
+    required String message,
+  }) async {
+    final normalizedPhoneNumber = normalizeWhatsAppPhoneNumber(
+      recipientPhoneNumber,
+    );
+    if (normalizedPhoneNumber == null) {
+      throw const WhatsAppInvoiceShareException();
+    }
     try {
-      final didLaunch = await _launcher(buildWhatsAppInvoiceUri(message));
+      final didLaunch = await _launcher(
+        buildWhatsAppInvoiceUri(
+          recipientPhoneNumber: normalizedPhoneNumber,
+          message: message,
+        ),
+      );
       if (!didLaunch) throw const WhatsAppInvoiceShareException();
     } on WhatsAppInvoiceShareException {
       rethrow;

@@ -28,7 +28,7 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   bool _isSharingInvoice = false;
 
-  Future<void> _shareInvoice(
+  Future<void> _promptForCustomerNumber(
     BillingState billingState,
     ShopState shopState,
   ) async {
@@ -43,6 +43,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
       return;
     }
 
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => _WhatsAppNumberDialog(
+            onSubmit:
+                (phoneNumber) => _shareInvoice(
+                  billingState: billingState,
+                  shopState: shopState,
+                  phoneNumber: phoneNumber,
+                ),
+          ),
+    );
+  }
+
+  Future<bool> _shareInvoice({
+    required BillingState billingState,
+    required ShopLoaded shopState,
+    required String phoneNumber,
+  }) async {
+    if (_isSharingInvoice) return false;
+    final localizations = AppLocalizations.of(context);
     final message = widget.messageBuilder.build(
       localizations: localizations,
       shop: shopState.shop,
@@ -51,9 +73,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
     setState(() => _isSharingInvoice = true);
     try {
-      await widget.whatsAppInvoiceService.share(message);
+      await widget.whatsAppInvoiceService.share(
+        recipientPhoneNumber: phoneNumber,
+        message: message,
+      );
+      return true;
     } catch (_) {
-      if (mounted) _showError(localizations.whatsAppShareFailed);
+      return false;
     } finally {
       if (mounted) setState(() => _isSharingInvoice = false);
     }
@@ -322,7 +348,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       _isSharingInvoice ||
                                               billingState.isPrinting
                                           ? null
-                                          : () => _shareInvoice(
+                                          : () => _promptForCustomerNumber(
                                             billingState,
                                             shopState,
                                           ),
@@ -476,6 +502,154 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ? Theme.of(context).colorScheme.onSurfaceVariant
                   : Theme.of(context).colorScheme.onSurface,
         ),
+      ),
+    );
+  }
+}
+
+typedef _SubmitWhatsAppNumber = Future<bool> Function(String phoneNumber);
+
+class _WhatsAppNumberDialog extends StatefulWidget {
+  const _WhatsAppNumberDialog({required this.onSubmit});
+
+  final _SubmitWhatsAppNumber onSubmit;
+
+  @override
+  State<_WhatsAppNumberDialog> createState() => _WhatsAppNumberDialogState();
+}
+
+class _WhatsAppNumberDialogState extends State<_WhatsAppNumberDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _phoneController = TextEditingController();
+  bool _isSubmitting = false;
+  bool _shareFailed = false;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting || !_formKey.currentState!.validate()) return;
+    final phoneNumber = normalizeWhatsAppPhoneNumber(_phoneController.text)!;
+    setState(() {
+      _isSubmitting = true;
+      _shareFailed = false;
+    });
+
+    final didOpen = await widget.onSubmit(phoneNumber);
+    if (!mounted) return;
+    if (didOpen) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() {
+      _isSubmitting = false;
+      _shareFailed = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    const whatsAppGreen = Color(0xFF075E54);
+
+    return PopScope(
+      canPop: !_isSubmitting,
+      child: AlertDialog(
+        icon: const Icon(
+          Icons.chat_bubble_outline_rounded,
+          color: whatsAppGreen,
+          size: 36,
+        ),
+        title: Text(
+          localizations.clientWhatsAppNumber,
+          textAlign: TextAlign.center,
+        ),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                localizations.clientWhatsAppNumberHelp,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                key: const ValueKey('whatsapp-phone-field'),
+                controller: _phoneController,
+                autofocus: true,
+                enabled: !_isSubmitting,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.done,
+                maxLength: 24,
+                decoration: InputDecoration(
+                  hintText: localizations.clientWhatsAppNumberHint,
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  counterText: '',
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return localizations.clientPhoneNumberRequired;
+                  }
+                  if (normalizeWhatsAppPhoneNumber(value) == null) {
+                    return localizations.invalidWhatsAppNumber;
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) {
+                  if (!_isSubmitting) _submit();
+                },
+              ),
+              if (_shareFailed) ...[
+                const SizedBox(height: 12),
+                Text(
+                  localizations.whatsAppShareFailed,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: scheme.error),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+            child: Text(localizations.cancel),
+          ),
+          FilledButton.icon(
+            key: const ValueKey('continue-to-whatsapp'),
+            onPressed: _isSubmitting ? null : _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: whatsAppGreen,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: whatsAppGreen.withValues(alpha: 0.55),
+              disabledForegroundColor: Colors.white.withValues(alpha: 0.85),
+            ),
+            icon:
+                _isSubmitting
+                    ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : const Icon(Icons.arrow_forward_rounded),
+            label: Text(
+              _isSubmitting
+                  ? localizations.openingWhatsApp
+                  : localizations.continueToWhatsApp,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -587,4 +587,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emptyInvoiceCannotShare =>
       'Add at least one item before sharing the invoice.';
+
+  @override
+  String get clientWhatsAppNumber => 'Customer WhatsApp number';
+
+  @override
+  String get clientWhatsAppNumberHint => '+237 6 99 00 00 00';
+
+  @override
+  String get clientWhatsAppNumberHelp =>
+      'The number is used only to open the conversation and will not be saved.';
+
+  @override
+  String get clientPhoneNumberRequired => 'Enter the customer\'s number.';
+
+  @override
+  String get invalidWhatsAppNumber =>
+      'Enter a valid number with its country code.';
+
+  @override
+  String get continueToWhatsApp => 'Continue to WhatsApp';
 }
