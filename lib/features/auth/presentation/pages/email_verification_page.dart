@@ -10,6 +10,8 @@ import '../bloc/auth_bloc.dart';
 
 const _resendCooldownSeconds = 60;
 const _autoCheckInterval = Duration(seconds: 4);
+const _successAnimationDuration = Duration(milliseconds: 1200);
+const _successHoldDuration = Duration(milliseconds: 500);
 
 /// Gates access to the app until the signed-in user's email is verified.
 /// Uses Firebase's native "click the link in your email" verification (no
@@ -25,17 +27,40 @@ class EmailVerificationPage extends StatefulWidget {
   State<EmailVerificationPage> createState() => _EmailVerificationPageState();
 }
 
-class _EmailVerificationPageState extends State<EmailVerificationPage> {
+class _EmailVerificationPageState extends State<EmailVerificationPage>
+    with SingleTickerProviderStateMixin {
   Timer? _cooldownTimer;
   Timer? _autoCheckTimer;
+  late final AnimationController _successController;
+  late final Animation<double> _ringOpacity;
+  late final Animation<double> _checkScale;
+  late final Animation<double> _messageOpacity;
   int _cooldownSeconds = 0;
   bool _isSending = false;
   bool _isChecking = false;
+  bool _refreshInProgress = false;
+  bool _verificationCompleted = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _successController = AnimationController(
+      vsync: this,
+      duration: _successAnimationDuration,
+    );
+    _ringOpacity = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(1), weight: 58),
+      TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 42),
+    ]).animate(_successController);
+    _checkScale = CurvedAnimation(
+      parent: _successController,
+      curve: const Interval(0.35, 1, curve: Curves.elasticOut),
+    );
+    _messageOpacity = CurvedAnimation(
+      parent: _successController,
+      curve: const Interval(0.62, 1, curve: Curves.easeOut),
+    );
     _sendLink();
     _autoCheckTimer =
         Timer.periodic(_autoCheckInterval, (_) => _checkStatus(silent: true));
@@ -45,6 +70,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   void dispose() {
     _cooldownTimer?.cancel();
     _autoCheckTimer?.cancel();
+    _successController.dispose();
     super.dispose();
   }
 
@@ -72,7 +98,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     });
     final authRepository = context.read<AuthBloc>().authRepository;
     final result = await authRepository.sendVerificationEmail();
-    if (!mounted) return;
+    if (!mounted || _verificationCompleted) return;
     result.fold(
       (failure) => setState(() {
         _isSending = false;
@@ -86,6 +112,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
   Future<void> _checkStatus({bool silent = false}) async {
+    if (_verificationCompleted || _refreshInProgress) return;
+    _refreshInProgress = true;
     if (!silent) {
       setState(() {
         _isChecking = true;
@@ -95,6 +123,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     final authRepository = context.read<AuthBloc>().authRepository;
     final result = await authRepository.refreshEmailVerificationStatus();
     if (!mounted) return;
+    _refreshInProgress = false;
     result.fold(
       (failure) {
         if (!silent) {
@@ -106,7 +135,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       },
       (refreshedUser) {
         if (refreshedUser.emailVerified) {
-          context.read<AuthBloc>().add(AuthUserChanged(refreshedUser));
+          unawaited(_showVerificationSuccess(refreshedUser));
           return;
         }
         if (!silent) {
@@ -118,6 +147,23 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         }
       },
     );
+  }
+
+  Future<void> _showVerificationSuccess(AppUser refreshedUser) async {
+    if (_verificationCompleted) return;
+    _autoCheckTimer?.cancel();
+    _cooldownTimer?.cancel();
+    setState(() {
+      _verificationCompleted = true;
+      _isChecking = false;
+      _isSending = false;
+      _error = null;
+    });
+
+    await _successController.forward(from: 0);
+    await Future<void>.delayed(_successHoldDuration);
+    if (!mounted) return;
+    context.read<AuthBloc>().add(AuthUserChanged(refreshedUser));
   }
 
   @override
@@ -133,49 +179,116 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.mark_email_unread,
-                      size: 56, color: AppTheme.primaryColor),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Vérifie ton email',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.user.email == null
-                        ? 'On vient de t\'envoyer un lien de vérification.'
-                        : 'On vient d\'envoyer un lien de vérification à ${widget.user.email}. Clique dessus, cet écran se débloque automatiquement.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[500]),
-                  ),
-                  const SizedBox(height: 24),
-                  if (_error != null) ...[
-                    Text(_error!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red)),
-                    const SizedBox(height: 8),
-                  ],
-                  PrimaryButton(
-                    onPressed: _isChecking ? null : () => _checkStatus(),
-                    isLoading: _isChecking,
-                    icon: Icons.check_circle_outline,
-                    label: 'J\'ai cliqué sur le lien',
-                  ),
-                  TextButton(
-                    onPressed:
-                        (_isSending || _cooldownSeconds > 0) ? null : _sendLink,
-                    child: Text(
-                      _cooldownSeconds > 0
-                          ? 'Renvoyer l\'email (${_cooldownSeconds}s)'
-                          : 'Renvoyer l\'email',
+                  if (_verificationCompleted) ...[
+                    SizedBox(
+                      height: 132,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          FadeTransition(
+                            opacity: _ringOpacity,
+                            child: RotationTransition(
+                              turns: _successController,
+                              child: const SizedBox(
+                                width: 104,
+                                height: 104,
+                                child: CircularProgressIndicator(
+                                  value: 0.76,
+                                  strokeWidth: 8,
+                                  color: AppTheme.primaryColor,
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              ),
+                            ),
+                          ),
+                          ScaleTransition(
+                            scale: _checkScale,
+                            child: Container(
+                              width: 96,
+                              height: 96,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.green,
+                              ),
+                              child: const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 58,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        context.read<AuthBloc>().add(LogOutRequested()),
-                    child: const Text('Se déconnecter'),
-                  ),
+                    const SizedBox(height: 16),
+                    FadeTransition(
+                      opacity: _messageOpacity,
+                      child: const Column(
+                        children: [
+                          Text(
+                            'Email vérifié !',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Ouverture de ta boutique…',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    const Icon(Icons.mark_email_unread,
+                        size: 56, color: AppTheme.primaryColor),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Vérifie ton email',
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.user.email == null
+                          ? 'On vient de t\'envoyer un lien de vérification.'
+                          : 'On vient d\'envoyer un lien de vérification à ${widget.user.email}. Clique dessus, cet écran se débloque automatiquement.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[500]),
+                    ),
+                    const SizedBox(height: 24),
+                    if (_error != null) ...[
+                      Text(_error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 8),
+                    ],
+                    PrimaryButton(
+                      onPressed: _isChecking ? null : () => _checkStatus(),
+                      isLoading: _isChecking,
+                      icon: Icons.check_circle_outline,
+                      label: 'J\'ai cliqué sur le lien',
+                    ),
+                    TextButton(
+                      onPressed: (_isSending || _cooldownSeconds > 0)
+                          ? null
+                          : _sendLink,
+                      child: Text(
+                        _cooldownSeconds > 0
+                            ? 'Renvoyer l\'email (${_cooldownSeconds}s)'
+                            : 'Renvoyer l\'email',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          context.read<AuthBloc>().add(LogOutRequested()),
+                      child: const Text('Se déconnecter'),
+                    ),
+                  ],
                 ],
               ),
             ),

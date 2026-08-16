@@ -3,6 +3,7 @@ import 'package:billing_app/features/auth/domain/entities/app_user.dart';
 import 'package:billing_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:billing_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:billing_app/features/auth/presentation/pages/auth_page.dart';
+import 'package:billing_app/core/widgets/google_sign_in_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +28,25 @@ void main() {
 
     expect(fieldRect.width, 342);
     expect(fieldRect.center.dx, 195);
+  });
+
+  testWidgets('an unexpected Google error is visible and unlocks the button',
+      (tester) async {
+    await tester.pumpWidget(_buildAuthPage());
+
+    await tester.tap(find.text('Continuer avec Google'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Connexion Google impossible. Réessaie ou utilise ton email.',
+      ),
+      findsOneWidget,
+    );
+    final button = tester.widget<GoogleSignInButton>(
+      find.byType(GoogleSignInButton),
+    );
+    expect(button.onPressed, isNotNull);
   });
 }
 

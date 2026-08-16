@@ -91,6 +91,66 @@ void main() {
       ],
     );
   });
+
+  test('Google sign-in emits submitting then the authenticated user', () async {
+    const googleUser = AppUser(
+      uid: 'google-user',
+      email: 'google@example.com',
+      emailVerified: true,
+    );
+    final repository = _FakeAuthRepository(googleUser: googleUser);
+    final bloc = AuthBloc(authRepository: repository);
+    addTearDown(bloc.close);
+
+    final states = bloc.stream.take(2).toList();
+    bloc.add(GoogleSignInRequested());
+
+    expect(
+      await states,
+      [isA<AuthSubmitting>(), const AuthAuthenticated(googleUser)],
+    );
+  });
+
+  test('a Google cancellation is exposed instead of leaving the form loading',
+      () async {
+    final repository = _FakeAuthRepository(
+      googleFailure: const AuthFailure('Connexion Google annulée.'),
+    );
+    final bloc = AuthBloc(authRepository: repository);
+    addTearDown(bloc.close);
+
+    final states = bloc.stream.take(2).toList();
+    bloc.add(GoogleSignInRequested());
+
+    expect(
+      await states,
+      [
+        isA<AuthSubmitting>(),
+        const AuthError('Connexion Google annulée.'),
+      ],
+    );
+  });
+
+  test('an unexpected Google error cannot leave the form loading', () async {
+    final repository = _FakeAuthRepository(
+      googleException: UnsupportedError('not supported'),
+    );
+    final bloc = AuthBloc(authRepository: repository);
+    addTearDown(bloc.close);
+
+    final states = bloc.stream.take(2).toList();
+    bloc.add(GoogleSignInRequested());
+
+    expect(
+      await states,
+      [
+        isA<AuthSubmitting>(),
+        const AuthError(
+          'Connexion Google impossible. Réessaie ou utilise ton email.',
+        ),
+      ],
+    );
+  });
 }
 
 class _FakeAuthRepository implements AuthRepository {
@@ -98,11 +158,17 @@ class _FakeAuthRepository implements AuthRepository {
     this.currentUserValue,
     this.signUpUser,
     this.signUpFailure,
+    this.googleUser,
+    this.googleFailure,
+    this.googleException,
   });
 
   AppUser? currentUserValue;
   final AppUser? signUpUser;
   final Failure? signUpFailure;
+  final AppUser? googleUser;
+  final Failure? googleFailure;
+  final Object? googleException;
 
   @override
   Stream<AppUser?> get authStateChanges => const Stream.empty();
@@ -126,7 +192,16 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, AppUser>> signInWithGoogle() async {
-    return const Left(AuthFailure('Non utilisé dans ce test.'));
+    final exception = googleException;
+    if (exception != null) throw exception;
+    final user = googleUser;
+    if (user != null) {
+      currentUserValue = user;
+      return Right(user);
+    }
+    return Left(
+      googleFailure ?? const AuthFailure('Connexion Google impossible.'),
+    );
   }
 
   @override

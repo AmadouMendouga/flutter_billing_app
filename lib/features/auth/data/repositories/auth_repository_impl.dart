@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/app_user.dart';
@@ -26,8 +27,7 @@ class AuthRepositoryImpl implements AuthRepository {
   AppUser? get currentUser => _toAppUser(_firebaseAuth.currentUser);
 
   @override
-  Future<Either<Failure, AppUser>> signUp(
-      String email, String password) async {
+  Future<Either<Failure, AppUser>> signUp(String email, String password) async {
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email.trim(),
@@ -55,11 +55,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, AppUser>> signInWithGoogle() async {
     try {
-      final credential =
-          await _firebaseAuth.signInWithProvider(GoogleAuthProvider());
-      return Right(_toAppUser(credential.user)!);
+      final provider = GoogleAuthProvider();
+      final credential = kIsWeb
+          ? await _firebaseAuth.signInWithPopup(provider)
+          : await _firebaseAuth.signInWithProvider(provider);
+      final user = credential.user;
+      if (user == null) {
+        return const Left(
+          AuthFailure('Google n\'a retourné aucun compte. Réessaie.'),
+        );
+      }
+      return Right(_toAppUser(user)!);
     } on FirebaseAuthException catch (e) {
       return Left(AuthFailure(_messageFor(e)));
+    } catch (_) {
+      return const Left(AuthFailure(
+        'Connexion Google impossible. Réessaie ou utilise ton email.',
+      ));
     }
   }
 
@@ -96,9 +108,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, AppUser>> verifyEmailCode(String code) async {
     try {
-      await _functions
-          .httpsCallable('verifyEmailCode')
-          .call({'code': code});
+      await _functions.httpsCallable('verifyEmailCode').call({'code': code});
       await _firebaseAuth.currentUser?.reload();
       final refreshed = _toAppUser(_firebaseAuth.currentUser);
       if (refreshed == null) {
@@ -171,14 +181,22 @@ class AuthRepositoryImpl implements AuthRepository {
       case 'invalid-credential':
         return 'Email ou mot de passe incorrect.';
       case 'operation-not-allowed':
-        return 'Connexion par email/mot de passe non activée.';
+        return 'Ce mode de connexion n\'est pas activé.';
       case 'network-request-failed':
         return 'Pas de connexion internet.';
       case 'too-many-requests':
         return 'Trop de tentatives, réessaie dans quelques minutes.';
+      case 'popup-blocked':
+        return 'Le navigateur a bloqué la fenêtre Google. Autorise les pop-ups puis réessaie.';
       case 'popup-closed-by-user':
       case 'cancelled-popup-request':
+      case 'web-context-cancelled':
         return 'Connexion annulée.';
+      case 'unauthorized-domain':
+        return 'Ce domaine n\'est pas autorisé pour la connexion Google.';
+      case 'operation-not-supported-in-this-environment':
+      case 'web-storage-unsupported':
+        return 'Ce navigateur ne permet pas la connexion Google. Active les cookies ou essaie un autre navigateur.';
       case 'account-exists-with-different-credential':
         return 'Un compte existe déjà avec cet email via un autre moyen de connexion.';
       default:

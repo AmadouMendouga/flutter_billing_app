@@ -91,11 +91,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onGoogleSignInRequested(
       GoogleSignInRequested event, Emitter<AuthState> emit) async {
     emit(AuthSubmitting());
-    final result = await authRepository.signInWithGoogle();
-    result.fold(
-      (failure) => _emitCurrentUserOrError(emit, failure.message),
-      (user) => emit(AuthAuthenticated(user)),
-    );
+    try {
+      final result = await authRepository.signInWithGoogle();
+      result.fold(
+        (failure) => _emitCurrentUserOrError(emit, failure.message),
+        (user) => emit(AuthAuthenticated(user)),
+      );
+    } catch (_) {
+      _emitCurrentUserOrError(
+        emit,
+        'Connexion Google impossible. Réessaie ou utilise ton email.',
+      );
+    }
   }
 
   void _emitCurrentUserOrError(Emitter<AuthState> emit, String errorMessage) {
