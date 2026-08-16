@@ -36,9 +36,8 @@ class _AuthPageState extends State<AuthPage> {
     final email = _emailController.text;
     final password = _passwordController.text;
     if (_isSignUp) {
-      context
-          .read<AuthBloc>()
-          .add(SignUpRequested(email, password, _shopNameController.text.trim()));
+      context.read<AuthBloc>().add(
+          SignUpRequested(email, password, _shopNameController.text.trim()));
     } else {
       context.read<AuthBloc>().add(LogInRequested(email, password));
     }
@@ -60,116 +59,119 @@ class _AuthPageState extends State<AuthPage> {
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Icon(Icons.storefront,
-                          size: 56, color: AppTheme.primaryColor),
-                      const SizedBox(height: 12),
-                      Text(
-                        _isSignUp ? 'Créer un compte' : 'Se connecter',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _isSignUp
-                            ? 'Crée le compte de ta boutique'
-                            : 'Connecte-toi à ta boutique',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[500]),
-                      ),
-                      const SizedBox(height: 32),
-                      if (_isSignUp) ...[
-                        const InputLabel(text: 'Nom de la boutique'),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Icon(Icons.storefront,
+                            size: 56, color: AppTheme.primaryColor),
+                        const SizedBox(height: 12),
+                        Text(
+                          _isSignUp ? 'Créer un compte' : 'Se connecter',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isSignUp
+                              ? 'Crée le compte de ta boutique'
+                              : 'Connecte-toi à ta boutique',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                        const SizedBox(height: 32),
+                        if (_isSignUp) ...[
+                          const InputLabel(text: 'Nom de la boutique'),
+                          TextFormField(
+                            controller: _shopNameController,
+                            textCapitalization: TextCapitalization.words,
+                            decoration:
+                                const InputDecoration(hintText: 'Ma Boutique'),
+                            validator: _isSignUp
+                                ? AppValidators.required(
+                                    'Nom de la boutique requis')
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                        ],
+                        const InputLabel(text: 'Email'),
                         TextFormField(
-                          controller: _shopNameController,
-                          textCapitalization: TextCapitalization.words,
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
                           decoration: const InputDecoration(
-                              hintText: 'Ma Boutique'),
-                          validator: _isSignUp
-                              ? AppValidators.required(
-                                  'Nom de la boutique requis')
-                              : null,
+                              hintText: 'nara@example.com'),
+                          validator: AppValidators.email,
                         ),
                         const SizedBox(height: 15),
+                        const InputLabel(text: 'Mot de passe'),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          autofillHints: const [AutofillHints.password],
+                          decoration: InputDecoration(
+                              hintText: _isSignUp
+                                  ? 'Maj, min, chiffre & symbole (6+)'
+                                  : 'Min. 6 caractères'),
+                          validator: _isSignUp
+                              ? AppValidators.signUpPassword
+                              : AppValidators.password,
+                        ),
+                        if (!_isSignUp)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () => showForgotPasswordSheet(context,
+                                      initialEmail: _emailController.text),
+                              child: const Text('Mot de passe oublié ?'),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        PrimaryButton(
+                          onPressed: isLoading ? null : _submit,
+                          isLoading: isLoading,
+                          icon: _isSignUp ? Icons.person_add : Icons.login,
+                          label: _isSignUp ? 'Créer le compte' : 'Se connecter',
+                        ),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('ou',
+                                  style: TextStyle(color: Colors.grey[500])),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        GoogleSignInButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => context
+                                  .read<AuthBloc>()
+                                  .add(GoogleSignInRequested()),
+                        ),
+                        TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => setState(() => _isSignUp = !_isSignUp),
+                          child: Text(
+                            _isSignUp
+                                ? 'Tu as déjà un compte ? Se connecter'
+                                : "Pas encore de compte ? En créer un",
+                          ),
+                        ),
                       ],
-                      const InputLabel(text: 'Email'),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.email],
-                        decoration: const InputDecoration(
-                            hintText: 'nara@example.com'),
-                        validator: AppValidators.email,
-                      ),
-                      const SizedBox(height: 15),
-                      const InputLabel(text: 'Mot de passe'),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        autofillHints: const [AutofillHints.password],
-                        decoration: InputDecoration(
-                            hintText: _isSignUp
-                                ? 'Maj, min, chiffre & symbole (6+)'
-                                : 'Min. 6 caractères'),
-                        validator: _isSignUp
-                            ? AppValidators.signUpPassword
-                            : AppValidators.password,
-                      ),
-                      if (!_isSignUp)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: isLoading
-                                ? null
-                                : () => showForgotPasswordSheet(context,
-                                    initialEmail: _emailController.text),
-                            child: const Text('Mot de passe oublié ?'),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      PrimaryButton(
-                        onPressed: isLoading ? null : _submit,
-                        isLoading: isLoading,
-                        icon: _isSignUp ? Icons.person_add : Icons.login,
-                        label: _isSignUp ? 'Créer le compte' : 'Se connecter',
-                      ),
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('ou',
-                                style: TextStyle(color: Colors.grey[500])),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      GoogleSignInButton(
-                        onPressed: isLoading
-                            ? null
-                            : () => context
-                                .read<AuthBloc>()
-                                .add(GoogleSignInRequested()),
-                      ),
-                      TextButton(
-                        onPressed: isLoading
-                            ? null
-                            : () => setState(() => _isSignUp = !_isSignUp),
-                        child: Text(
-                          _isSignUp
-                              ? 'Tu as déjà un compte ? Se connecter'
-                              : "Pas encore de compte ? En créer un",
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

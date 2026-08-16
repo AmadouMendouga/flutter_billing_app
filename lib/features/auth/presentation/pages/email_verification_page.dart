@@ -37,7 +37,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   void initState() {
     super.initState();
     _sendLink();
-    _autoCheckTimer = Timer.periodic(_autoCheckInterval, (_) => _checkStatus(silent: true));
+    _autoCheckTimer =
+        Timer.periodic(_autoCheckInterval, (_) => _checkStatus(silent: true));
   }
 
   @override
@@ -111,7 +112,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         if (!silent) {
           setState(() {
             _isChecking = false;
-            _error = "Pas encore vérifié — clique d'abord le lien reçu par email.";
+            _error =
+                "Pas encore vérifié — clique d'abord le lien reçu par email.";
           });
         }
       },
@@ -125,54 +127,57 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(Icons.mark_email_unread,
-                    size: 56, color: AppTheme.primaryColor),
-                const SizedBox(height: 12),
-                const Text(
-                  'Vérifie ton email',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.user.email == null
-                      ? 'On vient de t\'envoyer un lien de vérification.'
-                      : 'On vient d\'envoyer un lien de vérification à ${widget.user.email}. Clique dessus, cet écran se débloque automatiquement.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[500]),
-                ),
-                const SizedBox(height: 24),
-                if (_error != null) ...[
-                  Text(_error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 8),
-                ],
-                PrimaryButton(
-                  onPressed: _isChecking ? null : () => _checkStatus(),
-                  isLoading: _isChecking,
-                  icon: Icons.check_circle_outline,
-                  label: 'J\'ai cliqué sur le lien',
-                ),
-                TextButton(
-                  onPressed:
-                      (_isSending || _cooldownSeconds > 0) ? null : _sendLink,
-                  child: Text(
-                    _cooldownSeconds > 0
-                        ? 'Renvoyer l\'email (${_cooldownSeconds}s)'
-                        : 'Renvoyer l\'email',
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(Icons.mark_email_unread,
+                      size: 56, color: AppTheme.primaryColor),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Vérifie ton email',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      context.read<AuthBloc>().add(LogOutRequested()),
-                  child: const Text('Se déconnecter'),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.user.email == null
+                        ? 'On vient de t\'envoyer un lien de vérification.'
+                        : 'On vient d\'envoyer un lien de vérification à ${widget.user.email}. Clique dessus, cet écran se débloque automatiquement.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
+                  const SizedBox(height: 24),
+                  if (_error != null) ...[
+                    Text(_error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red)),
+                    const SizedBox(height: 8),
+                  ],
+                  PrimaryButton(
+                    onPressed: _isChecking ? null : () => _checkStatus(),
+                    isLoading: _isChecking,
+                    icon: Icons.check_circle_outline,
+                    label: 'J\'ai cliqué sur le lien',
+                  ),
+                  TextButton(
+                    onPressed:
+                        (_isSending || _cooldownSeconds > 0) ? null : _sendLink,
+                    child: Text(
+                      _cooldownSeconds > 0
+                          ? 'Renvoyer l\'email (${_cooldownSeconds}s)'
+                          : 'Renvoyer l\'email',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        context.read<AuthBloc>().add(LogOutRequested()),
+                    child: const Text('Se déconnecter'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

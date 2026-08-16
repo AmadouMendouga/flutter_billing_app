@@ -1,30 +1,91 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:billing_app/core/error/failure.dart';
+import 'package:billing_app/features/auth/domain/entities/app_user.dart';
+import 'package:billing_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:billing_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:billing_app/features/auth/presentation/pages/auth_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:billing_app/main.dart';
+import 'package:fpdart/fpdart.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('the authentication form stays responsive', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.binding.setSurfaceSize(const Size(1440, 900));
+    await tester.pumpWidget(_buildAuthPage());
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    final emailField = find.byType(TextFormField).first;
+    var fieldRect = tester.getRect(emailField);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(fieldRect.width, 520);
+    expect(fieldRect.center.dx, 720);
+
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    await tester.pumpAndSettle();
+    fieldRect = tester.getRect(emailField);
+
+    expect(fieldRect.width, 342);
+    expect(fieldRect.center.dx, 195);
   });
+}
+
+Widget _buildAuthPage() {
+  return BlocProvider(
+    create: (_) => AuthBloc(authRepository: _FakeAuthRepository()),
+    child: const MaterialApp(home: AuthPage()),
+  );
+}
+
+class _FakeAuthRepository implements AuthRepository {
+  @override
+  Stream<AppUser?> get authStateChanges => const Stream.empty();
+
+  @override
+  AppUser? get currentUser => null;
+
+  @override
+  Future<Either<Failure, AppUser>> logIn(String email, String password) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, void>> logOut() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, AppUser>> refreshEmailVerificationStatus() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, void>> sendPasswordResetEmail(String email) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, void>> sendVerificationCode() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, void>> sendVerificationEmail() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, AppUser>> signInWithGoogle() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, AppUser>> signUp(String email, String password) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, AppUser>> verifyEmailCode(String code) {
+    throw UnimplementedError();
+  }
 }
