@@ -25,3 +25,28 @@ class UpdateShopUseCase implements UseCase<void, Shop> {
     return repository.updateShop(params);
   }
 }
+
+class EnsureShopParams {
+  const EnsureShopParams({this.initialName = ''});
+
+  final String initialName;
+}
+
+class EnsureShopUseCase implements UseCase<Shop, EnsureShopParams> {
+  EnsureShopUseCase(this.repository);
+
+  final ShopRepository repository;
+
+  @override
+  Future<Either<Failure, Shop>> call(EnsureShopParams params) {
+    return repository.ensureShop(initialName: params.initialName);
+  }
+}
+
+class WatchShopUseCase {
+  WatchShopUseCase(this.repository);
+
+  final ShopRepository repository;
+
+  Stream<Either<Failure, Shop>> call() => repository.watchShop();
+}

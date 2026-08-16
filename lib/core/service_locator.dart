@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
 import 'data/hive_database.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/admin/data/repositories/firestore_admin_repository.dart';
+import '../../features/admin/domain/repositories/admin_repository.dart';
 import '../../features/product/data/repositories/product_repository_impl.dart';
 import '../../features/product/domain/repositories/product_repository.dart';
 import '../../features/product/domain/usecases/product_usecases.dart';
@@ -42,6 +45,12 @@ Future<void> init() async {
   sl.registerFactory(() => AuthBloc(authRepository: sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
 
+  // Features - Administration. This remains compatible with Firebase Spark:
+  // authorization is enforced by Firestore rules and no Function is required.
+  sl.registerLazySingleton<AdminRepository>(
+    () => FirestoreAdminRepository(firestore: FirebaseFirestore.instance),
+  );
+
   // Features - Product
   // Bloc
   sl.registerFactory(
@@ -73,6 +82,8 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetShopUseCase(sl()));
   sl.registerLazySingleton(() => UpdateShopUseCase(sl()));
+  sl.registerLazySingleton(() => EnsureShopUseCase(sl()));
+  sl.registerLazySingleton(() => WatchShopUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ShopRepository>(() => ShopRepositoryImpl());

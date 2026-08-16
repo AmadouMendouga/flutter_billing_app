@@ -1207,6 +1207,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue to WhatsApp'**
   String get continueToWhatsApp;
+
+  /// No description provided for @checkingAccountAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your access…'**
+  String get checkingAccountAccess;
+
+  /// No description provided for @shopPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop awaiting approval'**
+  String get shopPendingTitle;
+
+  /// No description provided for @shopPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email is verified. An administrator must now approve your shop before it becomes active.'**
+  String get shopPendingMessage;
+
+  /// No description provided for @shopPendingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'You can complete the shop details while you wait.'**
+  String get shopPendingHelp;
+
+  /// No description provided for @completeShopProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete shop details'**
+  String get completeShopProfile;
+
+  /// No description provided for @shopSuspendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop temporarily disabled'**
+  String get shopSuspendedTitle;
+
+  /// No description provided for @shopSuspendedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This shop is temporarily disabled. Thank you for your understanding.'**
+  String get shopSuspendedMessage;
+
+  /// No description provided for @shopRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop request rejected'**
+  String get shopRejectedTitle;
+
+  /// No description provided for @shopRejectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The request could not be approved. See the reason below.'**
+  String get shopRejectedMessage;
+
+  /// No description provided for @statusReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get statusReason;
+
+  /// No description provided for @shopAccessLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to check the shop status.'**
+  String get shopAccessLoadFailed;
+
+  /// No description provided for @adminAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'This account no longer has access to administration.'**
+  String get adminAccessDenied;
+
+  /// No description provided for @adminDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Administration'**
+  String get adminDashboard;
+
+  /// No description provided for @adminDashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage requests, shops, and their products'**
+  String get adminDashboardSubtitle;
+
+  /// No description provided for @pendingShops.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pendingShops;
+
+  /// No description provided for @activeShops.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeShops;
+
+  /// No description provided for @suspendedShops.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get suspendedShops;
+
+  /// No description provided for @rejectedShops.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get rejectedShops;
+
+  /// No description provided for @allShops.
+  ///
+  /// In en, this message translates to:
+  /// **'All shops'**
+  String get allShops;
+
+  /// No description provided for @noShopsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No shops found.'**
+  String get noShopsFound;
+
+  /// No description provided for @shopOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get shopOwner;
+
+  /// No description provided for @shopStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop status'**
+  String get shopStatus;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get statusPending;
+
+  /// No description provided for @statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get statusActive;
+
+  /// No description provided for @statusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get statusSuspended;
+
+  /// No description provided for @statusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get statusRejected;
+
+  /// No description provided for @approveShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate shop'**
+  String get approveShop;
+
+  /// No description provided for @suspendShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend shop'**
+  String get suspendShop;
+
+  /// No description provided for @reactivateShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate shop'**
+  String get reactivateShop;
+
+  /// No description provided for @rejectShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject request'**
+  String get rejectShop;
+
+  /// No description provided for @administrativeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrative reason'**
+  String get administrativeReason;
+
+  /// No description provided for @administrativeReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the reason for this decision'**
+  String get administrativeReasonHint;
+
+  /// No description provided for @reasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A reason is required.'**
+  String get reasonRequired;
+
+  /// No description provided for @confirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirmAction;
+
+  /// No description provided for @shopStatusUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop status updated.'**
+  String get shopStatusUpdated;
+
+  /// No description provided for @adminActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The administrative action failed. Try again.'**
+  String get adminActionFailed;
+
+  /// No description provided for @viewShopDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get viewShopDetails;
+
+  /// No description provided for @registeredProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered products'**
+  String get registeredProducts;
+
+  /// No description provided for @copyProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy products'**
+  String get copyProducts;
+
+  /// No description provided for @destinationShop.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination shop'**
+  String get destinationShop;
+
+  /// No description provided for @selectProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Select products'**
+  String get selectProducts;
+
+  /// No description provided for @copySelectedProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy selection'**
+  String get copySelectedProducts;
+
+  /// No description provided for @copyStockNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied products will start with a stock of 0.'**
+  String get copyStockNotice;
+
+  /// No description provided for @noOtherShopAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No other shop is available.'**
+  String get noOtherShopAvailable;
+
+  /// No description provided for @productCopyCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{copied} product(s) copied, {skipped} skipped.'**
+  String productCopyCompleted(int copied, int skipped);
+
+  /// No description provided for @productCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to copy the products.'**
+  String get productCopyFailed;
+
+  /// No description provided for @adminAuditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity log'**
+  String get adminAuditLog;
+
+  /// No description provided for @refreshStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh status'**
+  String get refreshStatus;
 }
 
 class _AppLocalizationsDelegate

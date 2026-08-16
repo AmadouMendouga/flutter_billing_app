@@ -56,9 +56,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, AppUser>> signInWithGoogle() async {
     try {
       final provider = GoogleAuthProvider();
-      final credential = kIsWeb
-          ? await _firebaseAuth.signInWithPopup(provider)
-          : await _firebaseAuth.signInWithProvider(provider);
+      final credential =
+          kIsWeb
+              ? await _firebaseAuth.signInWithPopup(provider)
+              : await _firebaseAuth.signInWithProvider(provider);
       final user = credential.user;
       if (user == null) {
         return const Left(
@@ -69,9 +70,11 @@ class AuthRepositoryImpl implements AuthRepository {
     } on FirebaseAuthException catch (e) {
       return Left(AuthFailure(_messageFor(e)));
     } catch (_) {
-      return const Left(AuthFailure(
-        'Connexion Google impossible. Réessaie ou utilise ton email.',
-      ));
+      return const Left(
+        AuthFailure(
+          'Connexion Google impossible. Réessaie ou utilise ton email.',
+        ),
+      );
     }
   }
 
@@ -138,6 +141,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, AppUser>> refreshEmailVerificationStatus() async {
     try {
       await _firebaseAuth.currentUser?.reload();
+      // Refresh the ID token too: Firestore rules use `email_verified` before
+      // allowing the first pending shop document to be created.
+      await _firebaseAuth.currentUser?.getIdToken(true);
       final refreshed = _toAppUser(_firebaseAuth.currentUser);
       if (refreshed == null) {
         return const Left(AuthFailure('Session expirée, reconnecte-toi.'));

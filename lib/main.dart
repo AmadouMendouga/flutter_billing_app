@@ -165,6 +165,8 @@ class MyApp extends StatelessWidget {
             builder:
                 (context, child) => AuthGate(
                   authenticatedChild: child ?? const SizedBox.shrink(),
+                  adminRepository: di.sl(),
+                  shopRepository: di.sl(),
                 ),
           );
         },

@@ -2,27 +2,311 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /shops/{uid} {
-      function isOwner() {
-        return request.auth != null && request.auth.uid == uid;
-      }
+    function isSignedIn() {
+      return request.auth != null;
+    }
 
-      function hasValidProfileImage() {
-        return !('profileImage' in request.resource.data)
-          || (request.resource.data.profileImage is bytes
-            && request.resource.data.profileImage.size() <= 307200);
-      }
+    // Administrator documents must be created and maintained manually from
+    // the Firebase console. No client, including an administrator, can grant
+    // or modify administrative privileges.
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'reviewer', 'support', 'catalog_manager'];
+    }
 
-      allow read, delete: if isOwner();
-      allow create, update: if isOwner() && hasValidProfileImage();
+    function canReviewShops() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'reviewer'];
+    }
+
+    function canCopyProducts() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'catalog_manager'];
+    }
+
+    function isShopOwner(shopId) {
+      return isSignedIn() && request.auth.uid == shopId;
+    }
+
+    function hasValidProfileImage(data) {
+      return !('profileImage' in data)
+        || (data.profileImage is bytes
+          && data.profileImage.size() <= 307200);
+    }
+
+    function hasValidStatus(data) {
+      return !('status' in data)
+        || data.status in ['pending', 'active', 'suspended', 'rejected'];
+    }
+
+    // Shops created before moderation was introduced have no status. They
+    // intentionally remain active until an administrator assigns one.
+    function isShopActive(shopId) {
+      return exists(/databases/$(database)/documents/shops/$(shopId))
+        && (!('status' in get(/databases/$(database)/documents/shops/$(shopId)).data)
+          || get(/databases/$(database)/documents/shops/$(shopId)).data.status == 'active');
+    }
+
+    function isValidOwnerShopCreate(shopId) {
+      return isShopOwner(shopId)
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasAll([
+          'ownerUid',
+          'ownerEmail',
+          'status',
+          'statusReason',
+          'statusUpdatedAt',
+          'statusUpdatedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'addressLine1',
+          'addressLine2',
+          'phoneNumber',
+          'upiId',
+          'footerText',
+          'profileImage',
+          'ownerUid',
+          'ownerEmail',
+          'status',
+          'statusReason',
+          'statusUpdatedAt',
+          'statusUpdatedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && request.resource.data.status == 'pending'
+        && request.resource.data.statusReason == ''
+        && request.resource.data.statusUpdatedAt == request.time
+        && request.resource.data.statusUpdatedBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && hasValidProfileImage(request.resource.data);
+    }
+
+    function isValidOwnerShopUpdate(shopId) {
+      return isShopOwner(shopId)
+        && (!('status' in resource.data)
+          || resource.data.status in ['pending', 'active'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name',
+          'addressLine1',
+          'addressLine2',
+          'phoneNumber',
+          'upiId',
+          'footerText',
+          'profileImage',
+          'updatedAt'
+        ])
+        && request.resource.data.updatedAt == request.time
+        && hasValidProfileImage(request.resource.data);
+    }
+
+    function isValidAdminShopCreate() {
+      return request.resource.data.keys().hasAll([
+          'ownerUid',
+          'ownerEmail',
+          'status',
+          'statusReason',
+          'statusUpdatedAt',
+          'statusUpdatedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'addressLine1',
+          'addressLine2',
+          'phoneNumber',
+          'upiId',
+          'footerText',
+          'profileImage',
+          'ownerUid',
+          'ownerEmail',
+          'status',
+          'statusReason',
+          'statusUpdatedAt',
+          'statusUpdatedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerEmail is string
+        && request.resource.data.statusReason is string
+        && request.resource.data.statusUpdatedBy == request.auth.uid
+        && request.resource.data.statusUpdatedAt == request.time
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && hasValidStatus(request.resource.data)
+        && hasValidProfileImage(request.resource.data);
+    }
+
+    function isValidAdminShopUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'statusReason',
+          'updatedAt',
+          'statusUpdatedAt',
+          'statusUpdatedBy'
+        ])
+        && request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'status',
+          'statusReason'
+        ])
+        && request.resource.data.status
+          in ['pending', 'active', 'suspended', 'rejected']
+        && request.resource.data.statusReason is string
+        && (request.resource.data.status
+            in ['pending', 'active']
+          || request.resource.data.statusReason.size() > 0)
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.statusUpdatedAt == request.time
+        && request.resource.data.statusUpdatedBy == request.auth.uid
+        && hasValidProfileImage(request.resource.data);
+    }
+
+    function isValidShopStatusAudit() {
+      return canReviewShops()
+        && request.resource.data.keys().hasAll([
+          'action',
+          'actorUid',
+          'shopId',
+          'previousStatus',
+          'newStatus',
+          'reason',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'action',
+          'actorUid',
+          'shopId',
+          'previousStatus',
+          'newStatus',
+          'reason',
+          'createdAt'
+        ])
+        && request.resource.data.action == 'shop_status_changed'
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.shopId is string
+        && request.resource.data.previousStatus
+          in ['pending', 'active', 'suspended', 'rejected']
+        && request.resource.data.newStatus
+          in ['pending', 'active', 'suspended', 'rejected']
+        && request.resource.data.reason is string
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/shops/$(request.resource.data.shopId))
+        && request.resource.data.previousStatus == (
+          'status' in get(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data
+            ? get(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data.status
+            : 'active'
+        )
+        && getAfter(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data.status
+          == request.resource.data.newStatus
+        && getAfter(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data.statusUpdatedBy
+          == request.auth.uid
+        && getAfter(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data.statusUpdatedAt
+          == request.time;
+    }
+
+    function isValidProductCopyAudit() {
+      return canCopyProducts()
+        && request.resource.data.keys().hasAll([
+          'action',
+          'actorUid',
+          'sourceShopId',
+          'targetShopId',
+          'sourceCount',
+          'copiedCount',
+          'skippedCount',
+          'existingBarcodeSample',
+          'duplicateSourceBarcodeSample',
+          'missingBarcodeCount',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'action',
+          'actorUid',
+          'sourceShopId',
+          'targetShopId',
+          'sourceCount',
+          'copiedCount',
+          'skippedCount',
+          'existingBarcodeSample',
+          'duplicateSourceBarcodeSample',
+          'missingBarcodeCount',
+          'createdAt'
+        ])
+        && request.resource.data.action == 'products_copied'
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.sourceShopId is string
+        && request.resource.data.targetShopId is string
+        && request.resource.data.sourceShopId != request.resource.data.targetShopId
+        && request.resource.data.sourceCount is int
+        && request.resource.data.copiedCount is int
+        && request.resource.data.skippedCount is int
+        && request.resource.data.missingBarcodeCount is int
+        && request.resource.data.existingBarcodeSample is list
+        && request.resource.data.duplicateSourceBarcodeSample is list
+        && request.resource.data.existingBarcodeSample.size() <= 100
+        && request.resource.data.duplicateSourceBarcodeSample.size() <= 100
+        && request.resource.data.sourceCount >= 0
+        && request.resource.data.copiedCount >= 0
+        && request.resource.data.missingBarcodeCount >= 0
+        && request.resource.data.sourceCount
+          == request.resource.data.copiedCount
+            + request.resource.data.skippedCount
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /admins/{uid} {
+      // A signed-in user may inspect only their own registration. Enabled
+      // administrators may list/read the registry for administration screens.
+      allow get: if (isSignedIn() && request.auth.uid == uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /shops/{shopId} {
+      // Owners can read their document even while pending, suspended or
+      // rejected so the app can display the correct access screen.
+      allow get: if isShopOwner(shopId) || isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if (canReviewShops() && isValidAdminShopCreate())
+        || isValidOwnerShopCreate(shopId);
+      allow update: if (canReviewShops() && isValidAdminShopUpdate())
+        || isValidOwnerShopUpdate(shopId);
+      allow delete: if false;
 
       match /products/{productId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        // An administrator can inspect and copy products between shops.
+        // Owners lose all product access as soon as their shop is not active.
+        allow read: if isAdmin()
+          || (isShopOwner(shopId) && isShopActive(shopId));
+        allow create, update, delete: if (canCopyProducts() && isShopActive(shopId))
+          || (isShopOwner(shopId) && isShopActive(shopId));
       }
     }
 
-    // Verification codes are only ever read/written by Cloud Functions via
-    // the Admin SDK, which bypasses these rules — deny all client access.
+    match /adminAuditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isValidShopStatusAudit()
+        || isValidProductCopyAudit();
+      allow update, delete: if false;
+    }
+
+    // Verification codes are only ever read/written by trusted server code
+    // through the Admin SDK, which bypasses these rules.
     match /email_verifications/{uid} {
       allow read, write: if false;
     }

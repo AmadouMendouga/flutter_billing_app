@@ -607,4 +607,157 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueToWhatsApp => 'Continue to WhatsApp';
+
+  @override
+  String get checkingAccountAccess => 'Checking your access…';
+
+  @override
+  String get shopPendingTitle => 'Shop awaiting approval';
+
+  @override
+  String get shopPendingMessage =>
+      'Your email is verified. An administrator must now approve your shop before it becomes active.';
+
+  @override
+  String get shopPendingHelp =>
+      'You can complete the shop details while you wait.';
+
+  @override
+  String get completeShopProfile => 'Complete shop details';
+
+  @override
+  String get shopSuspendedTitle => 'Shop temporarily disabled';
+
+  @override
+  String get shopSuspendedMessage =>
+      'This shop is temporarily disabled. Thank you for your understanding.';
+
+  @override
+  String get shopRejectedTitle => 'Shop request rejected';
+
+  @override
+  String get shopRejectedMessage =>
+      'The request could not be approved. See the reason below.';
+
+  @override
+  String get statusReason => 'Reason';
+
+  @override
+  String get shopAccessLoadFailed => 'Unable to check the shop status.';
+
+  @override
+  String get adminAccessDenied =>
+      'This account no longer has access to administration.';
+
+  @override
+  String get adminDashboard => 'Administration';
+
+  @override
+  String get adminDashboardSubtitle =>
+      'Manage requests, shops, and their products';
+
+  @override
+  String get pendingShops => 'Pending';
+
+  @override
+  String get activeShops => 'Active';
+
+  @override
+  String get suspendedShops => 'Suspended';
+
+  @override
+  String get rejectedShops => 'Rejected';
+
+  @override
+  String get allShops => 'All shops';
+
+  @override
+  String get noShopsFound => 'No shops found.';
+
+  @override
+  String get shopOwner => 'Owner';
+
+  @override
+  String get shopStatus => 'Shop status';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusActive => 'Active';
+
+  @override
+  String get statusSuspended => 'Suspended';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get approveShop => 'Activate shop';
+
+  @override
+  String get suspendShop => 'Suspend shop';
+
+  @override
+  String get reactivateShop => 'Reactivate shop';
+
+  @override
+  String get rejectShop => 'Reject request';
+
+  @override
+  String get administrativeReason => 'Administrative reason';
+
+  @override
+  String get administrativeReasonHint => 'Explain the reason for this decision';
+
+  @override
+  String get reasonRequired => 'A reason is required.';
+
+  @override
+  String get confirmAction => 'Confirm';
+
+  @override
+  String get shopStatusUpdated => 'Shop status updated.';
+
+  @override
+  String get adminActionFailed =>
+      'The administrative action failed. Try again.';
+
+  @override
+  String get viewShopDetails => 'View details';
+
+  @override
+  String get registeredProducts => 'Registered products';
+
+  @override
+  String get copyProducts => 'Copy products';
+
+  @override
+  String get destinationShop => 'Destination shop';
+
+  @override
+  String get selectProducts => 'Select products';
+
+  @override
+  String get copySelectedProducts => 'Copy selection';
+
+  @override
+  String get copyStockNotice => 'Copied products will start with a stock of 0.';
+
+  @override
+  String get noOtherShopAvailable => 'No other shop is available.';
+
+  @override
+  String productCopyCompleted(int copied, int skipped) {
+    return '$copied product(s) copied, $skipped skipped.';
+  }
+
+  @override
+  String get productCopyFailed => 'Unable to copy the products.';
+
+  @override
+  String get adminAuditLog => 'Activity log';
+
+  @override
+  String get refreshStatus => 'Refresh status';
 }

@@ -250,6 +250,13 @@ final class _FakeShopRepository implements ShopRepository {
   Future<Either<Failure, Shop>> getShop() async => Right(shop);
 
   @override
+  Future<Either<Failure, Shop>> ensureShop({String initialName = ''}) async =>
+      Right(shop);
+
+  @override
+  Stream<Either<Failure, Shop>> watchShop() => Stream.value(Right(shop));
+
+  @override
   Future<Either<Failure, void>> updateShop(Shop shop) async =>
       const Right(null);
 }

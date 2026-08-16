@@ -615,4 +615,157 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get continueToWhatsApp => 'Continuer vers WhatsApp';
+
+  @override
+  String get checkingAccountAccess => 'Vérification de tes accès…';
+
+  @override
+  String get shopPendingTitle => 'Boutique en attente de validation';
+
+  @override
+  String get shopPendingMessage =>
+      'Ton email est vérifié. Un administrateur doit maintenant valider ta boutique avant son activation.';
+
+  @override
+  String get shopPendingHelp =>
+      'Tu peux compléter les informations de la boutique pendant l’attente.';
+
+  @override
+  String get completeShopProfile => 'Compléter la boutique';
+
+  @override
+  String get shopSuspendedTitle => 'Boutique momentanément désactivée';
+
+  @override
+  String get shopSuspendedMessage =>
+      'Cette boutique est momentanément désactivée. Merci pour votre compréhension.';
+
+  @override
+  String get shopRejectedTitle => 'Demande de boutique refusée';
+
+  @override
+  String get shopRejectedMessage =>
+      'La demande n’a pas pu être approuvée. Consulte le motif ci-dessous.';
+
+  @override
+  String get statusReason => 'Motif';
+
+  @override
+  String get shopAccessLoadFailed =>
+      'Impossible de vérifier l’état de la boutique.';
+
+  @override
+  String get adminAccessDenied =>
+      'Ce compte n’a plus accès à l’administration.';
+
+  @override
+  String get adminDashboard => 'Administration';
+
+  @override
+  String get adminDashboardSubtitle =>
+      'Gérer les demandes, les boutiques et leurs produits';
+
+  @override
+  String get pendingShops => 'En attente';
+
+  @override
+  String get activeShops => 'Actives';
+
+  @override
+  String get suspendedShops => 'Suspendues';
+
+  @override
+  String get rejectedShops => 'Refusées';
+
+  @override
+  String get allShops => 'Toutes les boutiques';
+
+  @override
+  String get noShopsFound => 'Aucune boutique trouvée.';
+
+  @override
+  String get shopOwner => 'Propriétaire';
+
+  @override
+  String get shopStatus => 'État de la boutique';
+
+  @override
+  String get statusPending => 'En attente';
+
+  @override
+  String get statusActive => 'Active';
+
+  @override
+  String get statusSuspended => 'Suspendue';
+
+  @override
+  String get statusRejected => 'Refusée';
+
+  @override
+  String get approveShop => 'Activer la boutique';
+
+  @override
+  String get suspendShop => 'Suspendre la boutique';
+
+  @override
+  String get reactivateShop => 'Réactiver la boutique';
+
+  @override
+  String get rejectShop => 'Refuser la demande';
+
+  @override
+  String get administrativeReason => 'Motif administratif';
+
+  @override
+  String get administrativeReasonHint => 'Explique la raison de cette décision';
+
+  @override
+  String get reasonRequired => 'Un motif est obligatoire.';
+
+  @override
+  String get confirmAction => 'Confirmer';
+
+  @override
+  String get shopStatusUpdated => 'État de la boutique mis à jour.';
+
+  @override
+  String get adminActionFailed => 'L’action administrative a échoué. Réessaie.';
+
+  @override
+  String get viewShopDetails => 'Voir les détails';
+
+  @override
+  String get registeredProducts => 'Produits enregistrés';
+
+  @override
+  String get copyProducts => 'Copier des produits';
+
+  @override
+  String get destinationShop => 'Boutique destinataire';
+
+  @override
+  String get selectProducts => 'Sélectionner les produits';
+
+  @override
+  String get copySelectedProducts => 'Copier la sélection';
+
+  @override
+  String get copyStockNotice => 'Le stock des produits copiés commencera à 0.';
+
+  @override
+  String get noOtherShopAvailable => 'Aucune autre boutique n’est disponible.';
+
+  @override
+  String productCopyCompleted(int copied, int skipped) {
+    return '$copied produit(s) copié(s), $skipped ignoré(s).';
+  }
+
+  @override
+  String get productCopyFailed => 'Impossible de copier les produits.';
+
+  @override
+  String get adminAuditLog => 'Journal d’activité';
+
+  @override
+  String get refreshStatus => 'Actualiser l’état';
 }
