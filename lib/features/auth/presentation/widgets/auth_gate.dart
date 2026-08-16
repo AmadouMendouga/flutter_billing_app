@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../product/presentation/bloc/product_bloc.dart';
 import '../../../shop/domain/entities/shop.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
@@ -33,6 +34,7 @@ class AuthGate extends StatelessWidget {
         } else if (state is AuthUnauthenticated) {
           context.read<ProductBloc>().add(ClearProducts());
           context.read<ShopBloc>().add(ClearShopEvent());
+          context.read<BillingBloc>().add(ClearCartEvent());
         }
       },
       builder: (context, state) {

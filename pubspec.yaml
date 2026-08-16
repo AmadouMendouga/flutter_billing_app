@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '>=3.7.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -44,7 +44,7 @@ dependencies:
   # Scanner & Printer
   pretty_qr_code: ^3.3.0
   print_bluetooth_thermal: ^1.1.2
-  mobile_scanner: ^5.1.0
+  mobile_scanner: ^7.4.0
   bloc: ^8.1.4
   uuid: ^4.5.2
   app_settings: ^7.0.0

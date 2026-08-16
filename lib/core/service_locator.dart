@@ -13,10 +13,17 @@ import '../../features/shop/presentation/bloc/shop_bloc.dart';
 import '../../features/settings/data/repositories/printer_repository_impl.dart';
 import '../../features/settings/domain/repositories/printer_repository.dart';
 import '../../features/settings/presentation/bloc/printer_bloc.dart';
+import 'services/scan_feedback_service.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  final scanFeedback = await ScanFeedbackService.create();
+  sl.registerSingleton<ScanFeedback>(
+    scanFeedback,
+    dispose: (_) => scanFeedback.dispose(),
+  );
+
   // Features - Auth
   sl.registerFactory(() => AuthBloc(authRepository: sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());

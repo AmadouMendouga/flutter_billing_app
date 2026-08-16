@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../../core/service_locator.dart' as di;
 import '../../features/billing/presentation/pages/home_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
 import '../../features/product/presentation/pages/add_product_page.dart';
@@ -14,17 +15,17 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const HomePage(),
+      builder: (context, state) => HomePage(scanFeedback: di.sl()),
       routes: [
-        GoRoute(
-          path: 'scanner',
-          builder: (context, state) => const ScannerPage(),
-        ),
         GoRoute(
           path: 'checkout',
           builder: (context, state) => const CheckoutPage(),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/scanner',
+      builder: (context, state) => ScannerPage(scanFeedback: di.sl()),
     ),
     GoRoute(
       path: '/settings',

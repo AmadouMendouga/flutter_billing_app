@@ -22,6 +22,7 @@ class _AuthPageState extends State<AuthPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isSignUp = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -130,13 +131,35 @@ class _AuthPageState extends State<AuthPage> {
                         const SizedBox(height: 15),
                         const InputLabel(text: 'Mot de passe'),
                         TextFormField(
+                          key: const ValueKey('password-field'),
                           controller: _passwordController,
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
+                          obscureText: _obscurePassword,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          autofillHints: [
+                            _isSignUp
+                                ? AutofillHints.newPassword
+                                : AutofillHints.password,
+                          ],
                           decoration: InputDecoration(
                               hintText: _isSignUp
                                   ? 'Maj, min, chiffre & symbole (6+)'
-                                  : 'Min. 6 caractères'),
+                                  : 'Min. 6 caractères',
+                              suffixIcon: IconButton(
+                                key: const ValueKey(
+                                    'password-visibility-toggle'),
+                                tooltip: _obscurePassword
+                                    ? 'Afficher le mot de passe'
+                                    : 'Masquer le mot de passe',
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                              )),
                           validator: _isSignUp
                               ? AppValidators.signUpPassword
                               : AppValidators.password,
@@ -182,7 +205,10 @@ class _AuthPageState extends State<AuthPage> {
                         TextButton(
                           onPressed: isLoading
                               ? null
-                              : () => setState(() => _isSignUp = !_isSignUp),
+                              : () => setState(() {
+                                    _isSignUp = !_isSignUp;
+                                    _obscurePassword = true;
+                                  }),
                           child: Text(
                             _isSignUp
                                 ? 'Tu as déjà un compte ? Se connecter'

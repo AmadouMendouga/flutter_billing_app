@@ -28,19 +28,21 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     result.fold(
       (failure) =>
           emit(state.copyWith(error: 'Product not found: ${event.barcode}')),
-      (product) {
-        add(AddProductToCartEvent(product));
-      },
+      (product) => _addProductToCart(product, emit),
     );
   }
 
   void _onAddProductToCart(
       AddProductToCartEvent event, Emitter<BillingState> emit) {
+    _addProductToCart(event.product, emit);
+  }
+
+  void _addProductToCart(Product product, Emitter<BillingState> emit) {
     // Clear error when adding
     final cleanState = state.copyWith(error: null);
 
     final existingIndex = cleanState.cartItems
-        .indexWhere((item) => item.product.id == event.product.id);
+        .indexWhere((item) => item.product.id == product.id);
     if (existingIndex >= 0) {
       final existingItem = cleanState.cartItems[existingIndex];
       final backendItems = List<CartItem>.from(cleanState.cartItems);
@@ -48,7 +50,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           existingItem.copyWith(quantity: existingItem.quantity + 1);
       emit(cleanState.copyWith(cartItems: backendItems, error: null));
     } else {
-      final newItem = CartItem(product: event.product);
+      final newItem = CartItem(product: product);
       emit(cleanState.copyWith(
           cartItems: [...cleanState.cartItems, newItem], error: null));
     }

@@ -30,17 +30,16 @@ void main() {
     expect(fieldRect.center.dx, 195);
   });
 
-  testWidgets('an unexpected Google error is visible and unlocks the button',
-      (tester) async {
+  testWidgets('an unexpected Google error is visible and unlocks the button', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildAuthPage());
 
     await tester.tap(find.text('Continuer avec Google'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text(
-        'Connexion Google impossible. Réessaie ou utilise ton email.',
-      ),
+      find.text('Connexion Google impossible. Réessaie ou utilise ton email.'),
       findsOneWidget,
     );
     final button = tester.widget<GoogleSignInButton>(
@@ -48,6 +47,35 @@ void main() {
     );
     expect(button.onPressed, isNotNull);
   });
+
+  testWidgets(
+    'the password can be shown, hidden, and is remasked on mode change',
+    (tester) async {
+      await tester.pumpWidget(_buildAuthPage());
+
+      final passwordField = find.byKey(const ValueKey('password-field'));
+      final visibilityToggle = find.byKey(
+        const ValueKey('password-visibility-toggle'),
+      );
+      EditableText editablePassword() => tester.widget<EditableText>(
+        find.descendant(of: passwordField, matching: find.byType(EditableText)),
+      );
+
+      expect(editablePassword().obscureText, isTrue);
+      expect(find.byTooltip('Afficher le mot de passe'), findsOneWidget);
+
+      await tester.tap(visibilityToggle);
+      await tester.pump();
+
+      expect(editablePassword().obscureText, isFalse);
+      expect(find.byTooltip('Masquer le mot de passe'), findsOneWidget);
+
+      await tester.tap(find.text('Pas encore de compte ? En créer un'));
+      await tester.pump();
+
+      expect(editablePassword().obscureText, isTrue);
+    },
+  );
 }
 
 Widget _buildAuthPage() {

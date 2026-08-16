@@ -37,8 +37,9 @@ class _AddProductPageState extends State<AddProductPage> {
       _formKey.currentState!.save();
 
       final productState = context.read<ProductBloc>().state;
-      final existingProduct =
-          productState.products.where((p) => p.barcode == _barcode).firstOrNull;
+      final existingProduct = productState.products
+          .where((p) => p.barcode.trim() == _barcode.trim())
+          .firstOrNull;
 
       if (existingProduct != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,7 +54,7 @@ class _AddProductPageState extends State<AddProductPage> {
       final product = Product(
         id: const Uuid().v4(),
         name: _name,
-        barcode: _barcode,
+        barcode: _barcode.trim(),
         price: _price,
       );
 
@@ -97,7 +98,7 @@ class _AddProductPageState extends State<AddProductPage> {
                           ),
                           validator:
                               AppValidators.required('Please enter a barcode'),
-                          onSaved: (value) => _barcode = value!,
+                          onSaved: (value) => _barcode = value!.trim(),
                         ),
                       ),
                       const SizedBox(width: 12),

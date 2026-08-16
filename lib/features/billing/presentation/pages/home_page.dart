@@ -1,89 +1,126 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vibration/vibration.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../../core/data/hive_database.dart';
+import '../../../../core/scanning/barcode_scan_throttle.dart';
+import '../../../../core/scanning/product_scanner_config.dart';
+import '../../../../core/services/scan_feedback_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../domain/entities/cart_item.dart';
 
 const _shopReminderDismissedKey = 'shop_reminder_dismissed';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.scanFeedback});
+
+  final ScanFeedback scanFeedback;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final MobileScannerController _scannerController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
-    returnImage: false,
-  );
-
-  final AudioPlayer _audioPlayer = AudioPlayer();
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  final MobileScannerController _scannerController =
+      createProductScannerController();
 
   bool _isCameraOn = true;
   bool _isFlashOn = false;
-  bool _shopReminderDismissed =
-      HiveDatabase.settingsBox.get(_shopReminderDismissedKey, defaultValue: false);
+  bool _shopReminderDismissed = HiveDatabase.settingsBox.get(
+    _shopReminderDismissedKey,
+    defaultValue: false,
+  );
 
   // Vertical position (from the top) of the draggable bottom panel.
   // Lazily initialized to the default position on first build, then
   // updated as the user drags the handle up/down.
   double? _panelTop;
 
-  // Cooldown mapping to prevent rapid firing of the same barcode
-  final Map<String, DateTime> _lastScanTimes = {};
+  final BarcodeScanThrottle _scanThrottle = BarcodeScanThrottle();
+  Future<void> _cameraOperation = Future<void>.value();
+  bool _isDisposing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isCameraOn) {
+        unawaited(_setScannerRunning(true));
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_scannerController.value.hasCameraPermission) return;
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (_isCameraOn) unawaited(_setScannerRunning(true));
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        unawaited(_setScannerRunning(false));
+    }
+  }
+
+  Future<void> _setScannerRunning(bool shouldRun) {
+    final nextOperation = _cameraOperation.then((_) async {
+      if (_isDisposing) return;
+      try {
+        if (shouldRun) {
+          if (!_scannerController.value.isRunning) {
+            await _scannerController.start();
+          }
+        } else if (_scannerController.value.isRunning) {
+          await _scannerController.stop();
+        }
+      } catch (error) {
+        debugPrint('Scanner lifecycle operation failed: $error');
+      }
+    });
+    _cameraOperation = nextOperation;
+    return nextOperation;
+  }
+
+  Future<void> _disposeScanner() async {
+    await _cameraOperation;
+    try {
+      await _scannerController.dispose();
+    } catch (error) {
+      debugPrint('Scanner disposal failed: $error');
+    }
+  }
 
   @override
   void dispose() {
-    _scannerController.dispose();
-    _audioPlayer.dispose();
+    _isDisposing = true;
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_disposeScanner());
     super.dispose();
   }
 
-  void _onDetect(BarcodeCapture capture) async {
-    final List<Barcode> barcodes = capture.barcodes;
+  void _onDetect(BarcodeCapture capture) {
     final now = DateTime.now();
 
-    for (final barcode in barcodes) {
-      if (barcode.rawValue != null) {
-        final rawValue = barcode.rawValue!;
+    for (final barcode in capture.barcodes) {
+      final rawValue = barcode.rawValue?.trim();
+      if (rawValue == null || rawValue.isEmpty) continue;
+      if (!_scanThrottle.accept(rawValue, now)) continue;
 
-        // Cooldown logic: 2 seconds per identical barcode
-        if (_lastScanTimes.containsKey(rawValue)) {
-          final lastScan = _lastScanTimes[rawValue]!;
-          if (now.difference(lastScan).inSeconds < 2) {
-            continue;
-          }
-        }
-
-        _lastScanTimes[rawValue] = now;
-
-        // Beep (best-effort; must never block barcode processing)
-        try {
-          unawaited(_audioPlayer.play(AssetSource('audio/bip.mp3')));
-        } catch (_) {}
-        // Vibrate
-        final hasVibrator = await Vibration.hasVibrator();
-        if (hasVibrator == true) {
-          Vibration.vibrate();
-        }
-
-        if (mounted) {
-          context.read<BillingBloc>().add(ScanBarcodeEvent(rawValue));
-        }
-        break; // Process one barcode at a time per frame
+      if (mounted) {
+        context.read<BillingBloc>().add(ScanBarcodeEvent(rawValue));
       }
+      widget.scanFeedback.trigger();
+      break;
     }
   }
 
@@ -100,8 +137,9 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       body: BlocListener<BillingBloc, BillingState>(
-        listenWhen: (previous, current) =>
-            previous.error != current.error && current.error != null,
+        listenWhen:
+            (previous, current) =>
+                previous.error != current.error && current.error != null,
         listener: (context, state) {
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -135,101 +173,112 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomSheet:
-          BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
-        return PrimaryButton(
-          onPressed: state.cartItems.isEmpty
-              ? null
-              : () async {
-                  _scannerController.stop();
-                  await context.push('/checkout');
-                  if (_isCameraOn && mounted) _scannerController.start();
-                },
-          icon: Icons.payment,
-          label: 'Review Order',
-        );
-      }),
+      bottomSheet: BlocBuilder<BillingBloc, BillingState>(
+        builder: (context, state) {
+          return PrimaryButton(
+            onPressed:
+                state.cartItems.isEmpty
+                    ? null
+                    : () async {
+                      await _setScannerRunning(false);
+                      if (!context.mounted) return;
+                      await context.push('/checkout');
+                      if (_isCameraOn && mounted) {
+                        await _setScannerRunning(true);
+                      }
+                    },
+            icon: Icons.payment,
+            label: 'Review Order',
+          );
+        },
+      ),
     );
   }
 
   Widget _buildScannerSection() {
-    return Container(
-      color: Colors.black,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: _onDetect,
-          ),
-          if (!_isCameraOn) _buildCameraOffState(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scanWindow = productScanWindow(constraints.biggest);
+        return ColoredBox(
+          color: Colors.black,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              MobileScanner(
+                controller: _scannerController,
+                onDetect: _onDetect,
+                scanWindow: scanWindow,
+                scanWindowUpdateThreshold: 8,
+                tapToFocus: true,
+              ),
+              if (!_isCameraOn) _buildCameraOffState(),
 
-          // Overlay Actions (Top Right)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Column(
-              children: [
-                _buildOverlayButton(
-                  icon: Icons.settings,
-                  onPressed: () async {
-                    _scannerController.stop();
-                    await context.push('/settings');
-                    if (_isCameraOn && mounted) _scannerController.start();
-                  },
-                ),
-                const SizedBox(height: 16),
-                if (_isCameraOn)
-                  _buildOverlayButton(
-                    icon:
-                        _isFlashOn ? Icons.flashlight_off : Icons.flashlight_on,
-                    onPressed: () {
-                      setState(() => _isFlashOn = !_isFlashOn);
-                      _scannerController.toggleTorch();
-                    },
-                  ),
-                if (_isCameraOn) const SizedBox(height: 16),
-                _buildOverlayButton(
-                  icon: _isCameraOn ? Icons.videocam : Icons.videocam_off,
-                  // color:  Colors.white24 ,
-                  onPressed: () {
-                    setState(() {
-                      _isCameraOn = !_isCameraOn;
-                    });
-                    if (_isCameraOn) {
-                      _scannerController.start();
-                    } else {
-                      _scannerController.stop();
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          // Central Overlay Bounding Box
-          if (_isCameraOn)
-            Center(
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white24, width: 2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
+              // Overlay Actions (Top Right)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                child: Column(
                   children: [
-                    // Corners
-                    _buildCorner(Alignment.topLeft),
-                    _buildCorner(Alignment.topRight),
-                    _buildCorner(Alignment.bottomLeft),
-                    _buildCorner(Alignment.bottomRight),
+                    _buildOverlayButton(
+                      icon: Icons.settings,
+                      onPressed: () async {
+                        await _setScannerRunning(false);
+                        if (!context.mounted) return;
+                        await context.push('/settings');
+                        if (_isCameraOn && mounted) {
+                          await _setScannerRunning(true);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    if (_isCameraOn)
+                      _buildOverlayButton(
+                        icon:
+                            _isFlashOn
+                                ? Icons.flashlight_off
+                                : Icons.flashlight_on,
+                        onPressed: () {
+                          setState(() => _isFlashOn = !_isFlashOn);
+                          _scannerController.toggleTorch();
+                        },
+                      ),
+                    if (_isCameraOn) const SizedBox(height: 16),
+                    _buildOverlayButton(
+                      icon: _isCameraOn ? Icons.videocam : Icons.videocam_off,
+                      onPressed: () async {
+                        final shouldRun = !_isCameraOn;
+                        setState(() => _isCameraOn = shouldRun);
+                        await _setScannerRunning(shouldRun);
+                      },
+                    ),
                   ],
                 ),
               ),
-            ),
-        ],
-      ),
+
+              if (_isCameraOn)
+                Positioned.fromRect(
+                  rect: scanWindow,
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white24, width: 2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Stack(
+                        children: [
+                          _buildCorner(Alignment.topLeft),
+                          _buildCorner(Alignment.topRight),
+                          _buildCorner(Alignment.bottomLeft),
+                          _buildCorner(Alignment.bottomRight),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -247,14 +296,20 @@ class _HomePageState extends State<HomePage> {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child:
-                const Icon(Icons.videocam_off, color: Colors.white, size: 32),
+            child: const Icon(
+              Icons.videocam_off,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
             'Camera is turned off',
             style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           const Padding(
@@ -271,24 +326,30 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                borderRadius: BorderRadius.circular(20),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             icon: const Icon(Icons.videocam),
-            label: const Text('Turn on Camera',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            onPressed: () {
+            label: const Text(
+              'Turn on Camera',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            onPressed: () async {
               setState(() => _isCameraOn = true);
-              _scannerController.start();
+              await _setScannerRunning(true);
             },
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOverlayButton(
-      {required IconData icon, required VoidCallback onPressed, Color? color}) {
+  Widget _buildOverlayButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
     return Container(
       width: 44,
       height: 44,
@@ -313,22 +374,26 @@ class _HomePageState extends State<HomePage> {
         height: 32,
         decoration: BoxDecoration(
           border: Border(
-            top: (alignment == Alignment.topLeft ||
-                    alignment == Alignment.topRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-            bottom: (alignment == Alignment.bottomLeft ||
-                    alignment == Alignment.bottomRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-            left: (alignment == Alignment.topLeft ||
-                    alignment == Alignment.bottomLeft)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-            right: (alignment == Alignment.topRight ||
-                    alignment == Alignment.bottomRight)
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
+            top:
+                (alignment == Alignment.topLeft ||
+                        alignment == Alignment.topRight)
+                    ? const BorderSide(color: Colors.greenAccent, width: 4)
+                    : BorderSide.none,
+            bottom:
+                (alignment == Alignment.bottomLeft ||
+                        alignment == Alignment.bottomRight)
+                    ? const BorderSide(color: Colors.greenAccent, width: 4)
+                    : BorderSide.none,
+            left:
+                (alignment == Alignment.topLeft ||
+                        alignment == Alignment.bottomLeft)
+                    ? const BorderSide(color: Colors.greenAccent, width: 4)
+                    : BorderSide.none,
+            right:
+                (alignment == Alignment.topRight ||
+                        alignment == Alignment.bottomRight)
+                    ? const BorderSide(color: Colors.greenAccent, width: 4)
+                    : BorderSide.none,
           ),
         ),
       ),
@@ -349,19 +414,24 @@ class _HomePageState extends State<HomePage> {
               color: AppTheme.primaryColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+                color: AppTheme.primaryColor.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
                     Icon(Icons.storefront, color: AppTheme.primaryColor),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text('Personnalise ta boutique !',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Personnalise ta boutique !',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -376,8 +446,10 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        HiveDatabase.settingsBox
-                            .put(_shopReminderDismissedKey, true);
+                        HiveDatabase.settingsBox.put(
+                          _shopReminderDismissedKey,
+                          true,
+                        );
                         setState(() => _shopReminderDismissed = true);
                       },
                       child: const Text('Ne plus afficher'),
@@ -387,12 +459,16 @@ class _HomePageState extends State<HomePage> {
                         backgroundColor: AppTheme.primaryColor,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                       onPressed: () async {
-                        _scannerController.stop();
+                        await _setScannerRunning(false);
+                        if (!context.mounted) return;
                         await context.push('/shop');
-                        if (_isCameraOn && mounted) _scannerController.start();
+                        if (_isCameraOn && mounted) {
+                          await _setScannerRunning(true);
+                        }
                       },
                       icon: const Icon(Icons.arrow_forward, size: 16),
                       label: const Text('Modifier'),
@@ -414,7 +490,10 @@ class _HomePageState extends State<HomePage> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(
-              color: Colors.black26, blurRadius: 15, offset: Offset(0, -5))
+            color: Colors.black26,
+            blurRadius: 15,
+            offset: Offset(0, -5),
+          ),
         ],
       ),
       child: Column(
@@ -424,8 +503,10 @@ class _HomePageState extends State<HomePage> {
             behavior: HitTestBehavior.opaque,
             onVerticalDragUpdate: (details) {
               setState(() {
-                _panelTop = (_panelTop! + details.delta.dy)
-                    .clamp(minPanelTop, maxPanelTop);
+                _panelTop = (_panelTop! + details.delta.dy).clamp(
+                  minPanelTop,
+                  maxPanelTop,
+                );
               });
             },
             child: Container(
@@ -450,40 +531,56 @@ class _HomePageState extends State<HomePage> {
           // Header
           BlocBuilder<BillingBloc, BillingState>(
             builder: (context, state) {
-              final totalItems =
-                  state.cartItems.fold<int>(0, (sum, i) => sum + i.quantity);
+              final totalItems = state.cartItems.fold<int>(
+                0,
+                (sum, i) => sum + i.quantity,
+              );
               return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Scanned Items',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w600)),
-                        Text('$totalItems items total',
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey)),
+                        const Text(
+                          'Scanned Items',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '$totalItems items total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('TOTAL PRICE',
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                                letterSpacing: 1.2)),
+                        const Text(
+                          'TOTAL PRICE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                         Text(
                           '${state.totalAmount.toStringAsFixed(0)} FCFA',
                           style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Theme.of(context).primaryColor),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ],
                     ),
@@ -496,27 +593,33 @@ class _HomePageState extends State<HomePage> {
 
           // List View
           Expanded(
-            child: Stack(children: [
-              BlocBuilder<BillingBloc, BillingState>(
-                builder: (context, state) {
-                  if (state.cartItems.isEmpty) {
-                    return _buildEmptyCart();
-                  }
+            child: Stack(
+              children: [
+                BlocBuilder<BillingBloc, BillingState>(
+                  builder: (context, state) {
+                    if (state.cartItems.isEmpty) {
+                      return _buildEmptyCart();
+                    }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.only(
-                        left: 15, right: 15, top: 16, bottom: 100),
-                    itemCount: state.cartItems.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final item = state.cartItems[index];
-                      return _buildCartItemCard(context, item);
-                    },
-                  );
-                },
-              ),
-            ]),
+                    return ListView.separated(
+                      padding: const EdgeInsets.only(
+                        left: 15,
+                        right: 15,
+                        top: 16,
+                        bottom: 100,
+                      ),
+                      itemCount: state.cartItems.length,
+                      separatorBuilder:
+                          (context, index) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final item = state.cartItems[index];
+                        return _buildCartItemCard(context, item);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -536,12 +639,17 @@ class _HomePageState extends State<HomePage> {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child:
-                Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
+            child: Icon(
+              Icons.shopping_basket,
+              size: 40,
+              color: Colors.grey[300],
+            ),
           ),
           const SizedBox(height: 16),
-          const Text('List is empty',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text(
+            'List is empty',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           const SizedBox(height: 8),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 40),
@@ -556,17 +664,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCartItemCard(
-    BuildContext context,
-    CartItem item,
-  ) {
+  Widget _buildCartItemCard(BuildContext context, CartItem item) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -581,7 +686,9 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   item.product.name,
                   style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -589,9 +696,10 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   '${item.product.price.toStringAsFixed(0)} FCFA',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.grey[600]),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
                 ),
               ],
             ),
@@ -606,17 +714,19 @@ class _HomePageState extends State<HomePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _circularIconButton(
-                    icon: Icons.remove,
-                    onPressed: () {
-                      if (item.quantity > 1) {
-                        context.read<BillingBloc>().add(UpdateQuantityEvent(
-                            item.product.id, item.quantity - 1));
-                      } else {
-                        context
-                            .read<BillingBloc>()
-                            .add(RemoveProductFromCartEvent(item.product.id));
-                      }
-                    }),
+                  icon: Icons.remove,
+                  onPressed: () {
+                    if (item.quantity > 1) {
+                      context.read<BillingBloc>().add(
+                        UpdateQuantityEvent(item.product.id, item.quantity - 1),
+                      );
+                    } else {
+                      context.read<BillingBloc>().add(
+                        RemoveProductFromCartEvent(item.product.id),
+                      );
+                    }
+                  },
+                ),
                 SizedBox(
                   width: 32,
                   child: Text(
@@ -626,11 +736,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 _circularIconButton(
-                    icon: Icons.add,
-                    onPressed: () {
-                      context.read<BillingBloc>().add(UpdateQuantityEvent(
-                          item.product.id, item.quantity + 1));
-                    }),
+                  icon: Icons.add,
+                  onPressed: () {
+                    context.read<BillingBloc>().add(
+                      UpdateQuantityEvent(item.product.id, item.quantity + 1),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -639,8 +751,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _circularIconButton(
-      {required IconData icon, required VoidCallback onPressed}) {
+  Widget _circularIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(8),

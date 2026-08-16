@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart'
+    show debugPrint, debugPrintStack, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'config/routes/app_routes.dart';
@@ -18,6 +21,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await _initializeFirebase();
+    await _configureAuthPersistence();
     await HiveDatabase.init();
     await di.init();
     runApp(const MyApp());
@@ -26,6 +30,18 @@ void main() async {
     // 'flutter-first-frame' event) never spins forever: a failed
     // startup still renders a frame, with a retry that re-runs main().
     runApp(const _StartupErrorApp());
+  }
+}
+
+Future<void> _configureAuthPersistence() async {
+  if (!kIsWeb) return;
+  try {
+    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  } catch (error, stackTrace) {
+    // Private browsing or blocked browser storage can make persistence
+    // unavailable. The application must still be able to start and sign in.
+    debugPrint('Unable to enable persistent authentication: $error');
+    debugPrintStack(stackTrace: stackTrace);
   }
 }
 
@@ -39,7 +55,8 @@ Future<void> _initializeFirebase() async {
   for (var attempt = 1; attempt <= 3; attempt++) {
     try {
       await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform);
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       return;
     } catch (_) {
       if (attempt == 3) rethrow;
@@ -86,10 +103,7 @@ class _RetryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: main,
-      child: const Text('Réessayer'),
-    );
+    return const ElevatedButton(onPressed: main, child: Text('Réessayer'));
   }
 }
 
@@ -101,24 +115,26 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create: (context) =>
-              di.sl<AuthBloc>()..add(AuthSubscriptionRequested()),
+          create:
+              (context) => di.sl<AuthBloc>()..add(AuthSubscriptionRequested()),
         ),
         BlocProvider<ProductBloc>(create: (context) => di.sl<ProductBloc>()),
         BlocProvider<ShopBloc>(create: (context) => di.sl<ShopBloc>()),
         BlocProvider<BillingBloc>(
-            create: (context) =>
-                BillingBloc(getProductByBarcodeUseCase: di.sl())),
+          create: (context) => BillingBloc(getProductByBarcodeUseCase: di.sl()),
+        ),
         BlocProvider<PrinterBloc>(
-            create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent())),
+          create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent()),
+        ),
       ],
       child: AuthGate(
-        authenticatedAppBuilder: (_) => MaterialApp.router(
-          title: 'Billing App',
-          theme: AppTheme.lightTheme,
-          debugShowCheckedModeBanner: false,
-          routerConfig: router,
-        ),
+        authenticatedAppBuilder:
+            (_) => MaterialApp.router(
+              title: 'Billing App',
+              theme: AppTheme.lightTheme,
+              debugShowCheckedModeBanner: false,
+              routerConfig: router,
+            ),
       ),
     );
   }

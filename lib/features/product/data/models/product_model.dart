@@ -13,7 +13,7 @@ class ProductModel extends Product {
     return ProductModel(
       id: product.id,
       name: product.name,
-      barcode: product.barcode,
+      barcode: product.barcode.trim(),
       price: product.price,
       stock: product.stock,
     );
@@ -23,7 +23,7 @@ class ProductModel extends Product {
     return ProductModel(
       id: id,
       name: map['name'] as String? ?? '',
-      barcode: map['barcode'] as String? ?? '',
+      barcode: (map['barcode'] as String? ?? '').trim(),
       price: (map['price'] as num?)?.toDouble() ?? 0,
       stock: (map['stock'] as num?)?.toInt() ?? 0,
     );
@@ -32,7 +32,7 @@ class ProductModel extends Product {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'barcode': barcode,
+      'barcode': barcode.trim(),
       'price': price,
       'stock': stock,
     };
