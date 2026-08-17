@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/product.dart';
+import '../entities/stock_sale_line.dart';
 import '../repositories/product_repository.dart';
 
 class GetProductsUseCase implements UseCase<List<Product>, NoParams> {
@@ -56,5 +57,17 @@ class GetProductByBarcodeUseCase implements UseCase<Product, String> {
   @override
   Future<Either<Failure, Product>> call(String params) {
     return repository.getProductByBarcode(params);
+  }
+}
+
+class CompleteSaleUseCase
+    implements UseCase<List<Product>, List<StockSaleLine>> {
+  final ProductRepository repository;
+
+  CompleteSaleUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, List<Product>>> call(List<StockSaleLine> params) {
+    return repository.completeSale(params);
   }
 }

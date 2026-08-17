@@ -1,5 +1,6 @@
 import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,16 +37,38 @@ class _ProductListPageState extends State<ProductListPage> {
 
   void _scanQR(List<Product> products) async {
     final barcode = await context.push<String>('/scanner');
-    if (barcode != null && barcode.isNotEmpty) {
-      final matchedProduct =
-          products.where((p) => p.barcode == barcode).firstOrNull;
-      if (matchedProduct != null) {
-        _searchController.text = matchedProduct.name;
-      } else {
-        _searchController.text =
-            barcode; // If not found, just put barcode in search
-      }
+    if (barcode == null || barcode.isEmpty) return;
+    if (!mounted) return;
+
+    final matchedProduct =
+        products.where((p) => p.barcode == barcode).firstOrNull;
+    if (matchedProduct != null) {
+      await _showRestockDialog(matchedProduct);
+    } else {
+      _searchController.text =
+          barcode; // If not found, just put barcode in search
     }
+  }
+
+  Future<void> _showRestockDialog(Product product) async {
+    final quantityToAdd = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => _RestockDialog(product: product),
+    );
+
+    if (quantityToAdd == null || !mounted) return;
+
+    context.read<ProductBloc>().add(
+      UpdateProduct(
+        Product(
+          id: product.id,
+          name: product.name,
+          barcode: product.barcode,
+          price: product.price,
+          stock: product.stock + quantityToAdd,
+        ),
+      ),
+    );
   }
 
   String _localizedProductMessage(
@@ -230,6 +253,30 @@ class _ProductListPageState extends State<ProductListPage> {
                       (context, index) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
+                    final isOutOfStock = product.stock == 0;
+                    final isLowStock = product.stock > 0 && product.stock <= 5;
+                    final stockLabel =
+                        isOutOfStock
+                            ? AppLocalizations.of(context).outOfStock
+                            : isLowStock
+                            ? AppLocalizations.of(
+                              context,
+                            ).lowStock(product.stock)
+                            : AppLocalizations.of(
+                              context,
+                            ).stockAvailable(product.stock);
+                    final stockBackgroundColor =
+                        isOutOfStock
+                            ? scheme.errorContainer
+                            : isLowStock
+                            ? scheme.tertiaryContainer
+                            : scheme.primaryContainer;
+                    final stockForegroundColor =
+                        isOutOfStock
+                            ? scheme.onErrorContainer
+                            : isLowStock
+                            ? scheme.onTertiaryContainer
+                            : scheme.onPrimaryContainer;
                     return Container(
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerLow,
@@ -264,6 +311,39 @@ class _ProductListPageState extends State<ProductListPage> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Semantics(
+                                  key: ValueKey(
+                                    'product-stock-badge-${product.id}',
+                                  ),
+                                  label: stockLabel,
+                                  child: ExcludeSemantics(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: stockBackgroundColor,
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                        border: Border.all(
+                                          color: stockForegroundColor
+                                              .withValues(alpha: 0.22),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        stockLabel,
+                                        style: TextStyle(
+                                          color: stockForegroundColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -360,6 +440,84 @@ class _ProductListPageState extends State<ProductListPage> {
           ],
         );
       },
+    );
+  }
+}
+
+class _RestockDialog extends StatefulWidget {
+  const _RestockDialog({required this.product});
+
+  final Product product;
+
+  @override
+  State<_RestockDialog> createState() => _RestockDialogState();
+}
+
+class _RestockDialogState extends State<_RestockDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _quantityController = TextEditingController();
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.pop(context, int.parse(_quantityController.text.trim()));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.restockDialogTitle),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.product.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(l10n.restockCurrentStock(widget.product.stock)),
+            const SizedBox(height: 16),
+            TextFormField(
+              key: const ValueKey('restock-quantity-field'),
+              controller: _quantityController,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: l10n.restockQuantityLabel,
+                hintText: '0',
+                prefixIcon: const Icon(Icons.inventory_2_outlined),
+              ),
+              validator: (value) {
+                final quantity = int.tryParse(value?.trim() ?? '');
+                if (quantity == null || quantity <= 0) {
+                  return l10n.invalidRestockQuantity;
+                }
+                return null;
+              },
+              onFieldSubmitted: (_) => _submit(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        TextButton(onPressed: _submit, child: Text(l10n.restockAddButton)),
+      ],
     );
   }
 }

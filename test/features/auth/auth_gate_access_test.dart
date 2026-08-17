@@ -9,6 +9,7 @@ import 'package:billing_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:billing_app/features/auth/presentation/widgets/auth_gate.dart';
 import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart';
 import 'package:billing_app/features/product/domain/entities/product.dart';
+import 'package:billing_app/features/product/domain/entities/stock_sale_line.dart';
 import 'package:billing_app/features/product/domain/repositories/product_repository.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
 import 'package:billing_app/features/product/presentation/bloc/product_bloc.dart';
@@ -145,6 +146,7 @@ Future<void> _pumpGate(
   );
   final billingBloc = BillingBloc(
     getProductByBarcodeUseCase: GetProductByBarcodeUseCase(productRepository),
+    completeSaleUseCase: CompleteSaleUseCase(productRepository),
   );
   addTearDown(authBloc.close);
   addTearDown(productBloc.close);
@@ -241,6 +243,11 @@ class _FakeShopRepository implements ShopRepository {
 }
 
 class _FakeProductRepository implements ProductRepository {
+  @override
+  Future<Either<Failure, List<Product>>> completeSale(
+    List<StockSaleLine> lines,
+  ) async => const Right([]);
+
   @override
   Future<Either<Failure, List<Product>>> getProducts() async => const Right([]);
 

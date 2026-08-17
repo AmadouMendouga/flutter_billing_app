@@ -42,6 +42,20 @@ final class ProductBarcodeIndex {
     _put(product);
   }
 
+  void upsertAll(String uid, Iterable<Product> products) {
+    bind(uid);
+    for (final product in products) {
+      final previous = _byId[product.id];
+      if (previous != null) {
+        final previousKey = _normalize(previous.barcode);
+        if (_byBarcode[previousKey]?.id == product.id) {
+          _byBarcode.remove(previousKey);
+        }
+      }
+      _put(product);
+    }
+  }
+
   void remove(String uid, String id) {
     bind(uid);
     final product = _byId.remove(id);

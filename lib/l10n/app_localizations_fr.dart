@@ -466,6 +466,52 @@ class AppLocalizationsFr extends AppLocalizations {
   String get stock => 'Stock';
 
   @override
+  String get stockQuantity => 'Quantité en stock';
+
+  @override
+  String stockAvailable(int quantity) {
+    return 'Stock : $quantity';
+  }
+
+  @override
+  String lowStock(int quantity) {
+    return 'Stock faible : $quantity';
+  }
+
+  @override
+  String get outOfStock => 'Rupture de stock (0)';
+
+  @override
+  String productOutOfStock(String productName) {
+    return '$productName est en rupture de stock.';
+  }
+
+  @override
+  String stockLimitReached(String productName, int available) {
+    return 'Seulement $available unité(s) de $productName sont disponibles.';
+  }
+
+  @override
+  String saleProductMissing(String productName) {
+    return '$productName n’est plus disponible. Actualise les produits puis réessaie.';
+  }
+
+  @override
+  String saleInsufficientStock(
+    String productName,
+    int available,
+    int requested,
+  ) {
+    return 'Stock insuffisant pour $productName : $available disponible(s), $requested demandé(s).';
+  }
+
+  @override
+  String get saleFailed => 'Impossible de terminer la vente. Réessaie.';
+
+  @override
+  String get completingSale => 'Finalisation de la vente…';
+
+  @override
   String get invalidPrice => 'Saisis un prix valide';
 
   @override
@@ -772,4 +818,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get refreshStatus => 'Actualiser l’état';
+
+  @override
+  String get restockDialogTitle => 'Ajouter du stock';
+
+  @override
+  String restockCurrentStock(int quantity) {
+    return 'Stock actuel : $quantity';
+  }
+
+  @override
+  String get restockQuantityLabel => 'Quantité à ajouter';
+
+  @override
+  String get restockAddButton => 'Ajouter au stock';
+
+  @override
+  String get invalidRestockQuantity => 'Saisis une quantité supérieure à 0';
 }

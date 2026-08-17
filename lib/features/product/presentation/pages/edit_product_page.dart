@@ -3,6 +3,7 @@ import 'package:billing_app/core/widgets/primary_button.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../bloc/product_bloc.dart';
@@ -20,12 +21,14 @@ class _EditProductPageState extends State<EditProductPage> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
   late double _price;
+  late int _stock;
 
   @override
   void initState() {
     super.initState();
     _name = widget.product.name;
     _price = widget.product.price;
+    _stock = widget.product.stock;
   }
 
   void _submit() {
@@ -37,6 +40,7 @@ class _EditProductPageState extends State<EditProductPage> {
         name: _name,
         barcode: widget.product.barcode,
         price: _price,
+        stock: _stock,
       );
 
       context.read<ProductBloc>().add(UpdateProduct(updatedProduct));
@@ -159,6 +163,29 @@ class _EditProductPageState extends State<EditProductPage> {
                     return null;
                   },
                   onSaved: (value) => _price = double.parse(value!),
+                ),
+                const SizedBox(height: 24),
+
+                InputLabel(text: AppLocalizations.of(context).stockQuantity),
+
+                TextFormField(
+                  key: const ValueKey('product-stock-field'),
+                  initialValue: _stock.toString(),
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.inventory_2_outlined),
+                  ),
+                  validator: (value) {
+                    final stock = int.tryParse(value?.trim() ?? '');
+                    if (stock == null || stock < 0) {
+                      return AppLocalizations.of(context).invalidStock;
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _stock = int.parse(value!.trim()),
+                  onFieldSubmitted: (_) => _submit(),
                 ),
               ],
             ),

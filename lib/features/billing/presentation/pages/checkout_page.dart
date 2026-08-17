@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../product/presentation/bloc/product_bloc.dart';
 import '../../domain/services/whatsapp_invoice_service.dart';
 import '../bloc/billing_bloc.dart';
 import '../services/invoice_message_builder.dart';
@@ -126,7 +127,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
         ),
         body: BlocConsumer<BillingBloc, BillingState>(
+          listenWhen:
+              (previous, current) =>
+                  (!previous.printSuccess && current.printSuccess) ||
+                  (!previous.saleCompleted && current.saleCompleted) ||
+                  (previous.issue != current.issue && current.issue != null),
           listener: (context, state) {
+            if (state.saleCompleted) {
+              context.read<ProductBloc>().add(LoadProducts());
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppLocalizations.of(context).saleCompleted),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              context.go('/');
+              return;
+            }
+            if (state.issue != null) {
+              _showError(_localizedBillingIssue(state.issue!));
+              return;
+            }
             if (state.printSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -346,7 +367,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   key: const ValueKey('send-invoice-whatsapp'),
                                   onPressed:
                                       _isSharingInvoice ||
-                                              billingState.isPrinting
+                                              billingState.isPrinting ||
+                                              billingState.isCompletingSale
                                           ? null
                                           : () => _promptForCustomerNumber(
                                             billingState,
@@ -369,7 +391,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 _buildActionButton(
                                   onPressed:
                                       billingState.isPrinting ||
-                                              _isSharingInvoice
+                                              _isSharingInvoice ||
+                                              billingState.isCompletingSale
                                           ? null
                                           : () {
                                             if (shopState is ShopLoaded) {
@@ -407,6 +430,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   backgroundColor: scheme.primary,
                                   foregroundColor: scheme.onPrimary,
                                 ),
+                                const SizedBox(height: 12),
+                                _buildActionButton(
+                                  key: const ValueKey('complete-sale-button'),
+                                  onPressed:
+                                      billingState.cartItems.isEmpty ||
+                                              billingState.isPrinting ||
+                                              _isSharingInvoice ||
+                                              billingState.isCompletingSale
+                                          ? null
+                                          : () =>
+                                              context.read<BillingBloc>().add(
+                                                const CompleteSaleEvent(),
+                                              ),
+                                  icon: Icons.check_circle_outline_rounded,
+                                  label:
+                                      billingState.isCompletingSale
+                                          ? AppLocalizations.of(
+                                            context,
+                                          ).completingSale
+                                          : AppLocalizations.of(
+                                            context,
+                                          ).completeSale,
+                                  isLoading: billingState.isCompletingSale,
+                                  backgroundColor: const Color(0xFF2E7D32),
+                                  foregroundColor: Colors.white,
+                                ),
                               ],
                             ),
                           ),
@@ -421,6 +470,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
       ),
     );
+  }
+
+  String _localizedBillingIssue(BillingIssue issue) {
+    final l10n = AppLocalizations.of(context);
+    return switch (issue.type) {
+      BillingIssueType.productNotFound => l10n.barcodeNotFound(issue.barcode),
+      BillingIssueType.outOfStock => l10n.productOutOfStock(issue.productName),
+      BillingIssueType.stockLimitReached => l10n.stockLimitReached(
+        issue.productName,
+        issue.availableStock,
+      ),
+      BillingIssueType.saleProductMissing => l10n.saleProductMissing(
+        issue.productName,
+      ),
+      BillingIssueType.saleInsufficientStock => l10n.saleInsufficientStock(
+        issue.productName,
+        issue.availableStock,
+        issue.requestedQuantity,
+      ),
+      BillingIssueType.saleFailed => l10n.saleFailed,
+    };
   }
 
   Widget _buildHeaderCell(BuildContext context, String text, TextAlign align) {

@@ -932,6 +932,70 @@ abstract class AppLocalizations {
   /// **'Stock'**
   String get stock;
 
+  /// No description provided for @stockQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock quantity'**
+  String get stockQuantity;
+
+  /// No description provided for @stockAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock: {quantity}'**
+  String stockAvailable(int quantity);
+
+  /// No description provided for @lowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock: {quantity}'**
+  String lowStock(int quantity);
+
+  /// No description provided for @outOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock (0)'**
+  String get outOfStock;
+
+  /// No description provided for @productOutOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'{productName} is out of stock.'**
+  String productOutOfStock(String productName);
+
+  /// No description provided for @stockLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {available} unit(s) of {productName} are available.'**
+  String stockLimitReached(String productName, int available);
+
+  /// No description provided for @saleProductMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{productName} is no longer available. Refresh the products and try again.'**
+  String saleProductMissing(String productName);
+
+  /// No description provided for @saleInsufficientStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient stock for {productName}: {available} available, {requested} requested.'**
+  String saleInsufficientStock(
+    String productName,
+    int available,
+    int requested,
+  );
+
+  /// No description provided for @saleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to complete the sale. Please try again.'**
+  String get saleFailed;
+
+  /// No description provided for @completingSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Completing sale…'**
+  String get completingSale;
+
   /// No description provided for @invalidPrice.
   ///
   /// In en, this message translates to:
@@ -1501,6 +1565,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh status'**
   String get refreshStatus;
+
+  /// No description provided for @restockDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add stock'**
+  String get restockDialogTitle;
+
+  /// No description provided for @restockCurrentStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Current stock: {quantity}'**
+  String restockCurrentStock(int quantity);
+
+  /// No description provided for @restockQuantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity to add'**
+  String get restockQuantityLabel;
+
+  /// No description provided for @restockAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to stock'**
+  String get restockAddButton;
+
+  /// No description provided for @invalidRestockQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a quantity greater than 0'**
+  String get invalidRestockQuantity;
 }
 
 class _AppLocalizationsDelegate

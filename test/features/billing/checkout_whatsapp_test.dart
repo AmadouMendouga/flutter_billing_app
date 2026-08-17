@@ -5,6 +5,7 @@ import 'package:billing_app/features/billing/domain/services/whatsapp_invoice_se
 import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart';
 import 'package:billing_app/features/billing/presentation/pages/checkout_page.dart';
 import 'package:billing_app/features/product/domain/entities/product.dart';
+import 'package:billing_app/features/product/domain/entities/stock_sale_line.dart';
 import 'package:billing_app/features/product/domain/repositories/product_repository.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
 import 'package:billing_app/features/shop/domain/entities/shop.dart';
@@ -23,6 +24,7 @@ void main() {
     name: 'Savon',
     barcode: '123',
     price: 1500,
+    stock: 10,
   );
   const shop = Shop(name: 'Ma Boutique', addressLine1: 'Douala');
 
@@ -30,10 +32,12 @@ void main() {
   late ShopBloc shopBloc;
 
   setUp(() async {
+    const productRepository = _FakeProductRepository(product);
     billingBloc = BillingBloc(
       getProductByBarcodeUseCase: GetProductByBarcodeUseCase(
-        const _FakeProductRepository(product),
+        productRepository,
       ),
+      completeSaleUseCase: CompleteSaleUseCase(productRepository),
     );
     final cartReady = billingBloc.stream.firstWhere(
       (state) => state.cartItems.isNotEmpty,
@@ -219,6 +223,11 @@ final class _FakeProductRepository implements ProductRepository {
   const _FakeProductRepository(this.product);
 
   final Product product;
+
+  @override
+  Future<Either<Failure, List<Product>>> completeSale(
+    List<StockSaleLine> lines,
+  ) async => Right([product]);
 
   @override
   Future<Either<Failure, void>> addProduct(Product product) async =>

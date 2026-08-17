@@ -44,4 +44,29 @@ void main() {
     expect(index.find(first.barcode), isNull);
     expect(index.isFullyLoaded, isFalse);
   });
+
+  test('upsertAll refreshes stock without leaving stale barcode entries', () {
+    final index = ProductBarcodeIndex();
+    const original = Product(
+      id: 'one',
+      name: 'Soap',
+      barcode: '00123',
+      price: 500,
+      stock: 10,
+    );
+    const afterSale = Product(
+      id: 'one',
+      name: 'Soap',
+      barcode: '00999',
+      price: 500,
+      stock: 7,
+    );
+
+    index.replace('shop', const [original]);
+    index.upsertAll('shop', const [afterSale]);
+
+    expect(index.find('00123'), isNull);
+    expect(index.find('00999'), afterSale);
+    expect(index.find('00999')!.stock, 7);
+  });
 }

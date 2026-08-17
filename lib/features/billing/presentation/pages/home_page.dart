@@ -140,17 +140,37 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body: BlocListener<BillingBloc, BillingState>(
         listenWhen:
             (previous, current) =>
-                previous.error != current.error && current.error != null,
+                (previous.issue != current.issue && current.issue != null) ||
+                (previous.error != current.error && current.error != null),
         listener: (context, state) {
-          if (state.error != null) {
-            final error = state.error!;
-            const productNotFoundPrefix = 'Product not found: ';
-            final message =
-                error.startsWith(productNotFoundPrefix)
-                    ? AppLocalizations.of(context).barcodeNotFound(
-                      error.substring(productNotFoundPrefix.length),
-                    )
-                    : error;
+          final issue = state.issue;
+          final l10n = AppLocalizations.of(context);
+          final message =
+              issue == null
+                  ? state.error
+                  : switch (issue.type) {
+                    BillingIssueType.productNotFound => l10n.barcodeNotFound(
+                      issue.barcode,
+                    ),
+                    BillingIssueType.outOfStock => l10n.productOutOfStock(
+                      issue.productName,
+                    ),
+                    BillingIssueType.stockLimitReached => l10n.stockLimitReached(
+                      issue.productName,
+                      issue.availableStock,
+                    ),
+                    BillingIssueType.saleProductMissing => l10n.saleProductMissing(
+                      issue.productName,
+                    ),
+                    BillingIssueType.saleInsufficientStock =>
+                      l10n.saleInsufficientStock(
+                      issue.productName,
+                      issue.availableStock,
+                      issue.requestedQuantity,
+                    ),
+                    BillingIssueType.saleFailed => l10n.saleFailed,
+                  };
+          if (message != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(message),

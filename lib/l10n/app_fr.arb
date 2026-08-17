@@ -184,6 +184,67 @@
   "exampleProductName": "Ex. : riz basmati",
   "productNameRequired": "Saisis le nom du produit",
   "stock": "Stock",
+  "stockQuantity": "Quantité en stock",
+  "stockAvailable": "Stock : {quantity}",
+  "@stockAvailable": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "lowStock": "Stock faible : {quantity}",
+  "@lowStock": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "outOfStock": "Rupture de stock (0)",
+  "productOutOfStock": "{productName} est en rupture de stock.",
+  "@productOutOfStock": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "stockLimitReached": "Seulement {available} unité(s) de {productName} sont disponibles.",
+  "@stockLimitReached": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      }
+    }
+  },
+  "saleProductMissing": "{productName} n’est plus disponible. Actualise les produits puis réessaie.",
+  "@saleProductMissing": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "saleInsufficientStock": "Stock insuffisant pour {productName} : {available} disponible(s), {requested} demandé(s).",
+  "@saleInsufficientStock": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "requested": {
+        "type": "int"
+      }
+    }
+  },
+  "saleFailed": "Impossible de terminer la vente. Réessaie.",
+  "completingSale": "Finalisation de la vente…",
   "invalidPrice": "Saisis un prix valide",
   "invalidStock": "Saisis une quantité en stock valide",
   "requiredField": "Champ requis",
@@ -304,5 +365,17 @@
   },
   "productCopyFailed": "Impossible de copier les produits.",
   "adminAuditLog": "Journal d’activité",
-  "refreshStatus": "Actualiser l’état"
+  "refreshStatus": "Actualiser l’état",
+  "restockDialogTitle": "Ajouter du stock",
+  "restockCurrentStock": "Stock actuel : {quantity}",
+  "@restockCurrentStock": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "restockQuantityLabel": "Quantité à ajouter",
+  "restockAddButton": "Ajouter au stock",
+  "invalidRestockQuantity": "Saisis une quantité supérieure à 0"
 }

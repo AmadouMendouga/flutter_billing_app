@@ -184,6 +184,67 @@
   "exampleProductName": "e.g. Basmati rice",
   "productNameRequired": "Please enter a product name",
   "stock": "Stock",
+  "stockQuantity": "Stock quantity",
+  "stockAvailable": "Stock: {quantity}",
+  "@stockAvailable": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "lowStock": "Low stock: {quantity}",
+  "@lowStock": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "outOfStock": "Out of stock (0)",
+  "productOutOfStock": "{productName} is out of stock.",
+  "@productOutOfStock": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "stockLimitReached": "Only {available} unit(s) of {productName} are available.",
+  "@stockLimitReached": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      }
+    }
+  },
+  "saleProductMissing": "{productName} is no longer available. Refresh the products and try again.",
+  "@saleProductMissing": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "saleInsufficientStock": "Insufficient stock for {productName}: {available} available, {requested} requested.",
+  "@saleInsufficientStock": {
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "requested": {
+        "type": "int"
+      }
+    }
+  },
+  "saleFailed": "Unable to complete the sale. Please try again.",
+  "completingSale": "Completing sale…",
   "invalidPrice": "Please enter a valid price",
   "invalidStock": "Please enter a valid stock quantity",
   "requiredField": "Required",
@@ -304,5 +365,17 @@
   },
   "productCopyFailed": "Unable to copy the products.",
   "adminAuditLog": "Activity log",
-  "refreshStatus": "Refresh status"
+  "refreshStatus": "Refresh status",
+  "restockDialogTitle": "Add stock",
+  "restockCurrentStock": "Current stock: {quantity}",
+  "@restockCurrentStock": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "restockQuantityLabel": "Quantity to add",
+  "restockAddButton": "Add to stock",
+  "invalidRestockQuantity": "Please enter a quantity greater than 0"
 }

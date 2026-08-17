@@ -3,6 +3,7 @@ import 'package:billing_app/core/widgets/primary_button.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
@@ -22,6 +23,7 @@ class _AddProductPageState extends State<AddProductPage> {
   String _name = '';
   String _barcode = '';
   double _price = 0.0;
+  int _stock = 0;
 
   void _scanBarcode() async {
     final result = await context.push<String>('/scanner');
@@ -59,6 +61,7 @@ class _AddProductPageState extends State<AddProductPage> {
         name: _name,
         barcode: _barcode.trim(),
         price: _price,
+        stock: _stock,
       );
 
       context.read<ProductBloc>().add(AddProduct(product));
@@ -179,6 +182,28 @@ class _AddProductPageState extends State<AddProductPage> {
                     return null;
                   },
                   onSaved: (value) => _price = double.parse(value!),
+                ),
+                const SizedBox(height: 24),
+                InputLabel(text: AppLocalizations.of(context).stockQuantity),
+                TextFormField(
+                  key: const ValueKey('product-stock-field'),
+                  initialValue: '0',
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    hintText: '0',
+                    prefixIcon: Icon(Icons.inventory_2_outlined),
+                  ),
+                  validator: (value) {
+                    final stock = int.tryParse(value?.trim() ?? '');
+                    if (stock == null || stock < 0) {
+                      return AppLocalizations.of(context).invalidStock;
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _stock = int.parse(value!.trim()),
+                  onFieldSubmitted: (_) => _submit(),
                 ),
               ],
             ),
