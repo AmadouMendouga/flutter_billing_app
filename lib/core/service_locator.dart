@@ -74,6 +74,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
   sl.registerLazySingleton(() => DeleteProductUseCase(sl()));
   sl.registerLazySingleton(() => GetProductByBarcodeUseCase(sl()));
+  sl.registerLazySingleton(() => CompleteSaleUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(() => ProductRepositoryImpl());

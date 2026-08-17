@@ -144,7 +144,11 @@ class MyApp extends StatelessWidget {
         BlocProvider<ProductBloc>(create: (context) => di.sl<ProductBloc>()),
         BlocProvider<ShopBloc>(create: (context) => di.sl<ShopBloc>()),
         BlocProvider<BillingBloc>(
-          create: (context) => BillingBloc(getProductByBarcodeUseCase: di.sl()),
+          create:
+              (context) => BillingBloc(
+                getProductByBarcodeUseCase: di.sl(),
+                completeSaleUseCase: di.sl(),
+              ),
         ),
         BlocProvider<PrinterBloc>(
           create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent()),
