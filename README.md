@@ -1,4 +1,4 @@
-# 🛒 Billing App — Application de caisse (POS) & facturation
+#  Billing App — Application de caisse (POS) & facturation
 
 [![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.1.0-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![State Management](https://img.shields.io/badge/State%20Management-flutter__bloc-4A90E2)](https://pub.dev/packages/flutter_bloc)
